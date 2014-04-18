@@ -1,4 +1,5 @@
 const Lang = imports.lang;
+const Mainloop = imports.mainloop;
 const St = imports.gi.St;
 
 const Applet = imports.ui.applet;
@@ -54,6 +55,10 @@ MyApplet.prototype = {
     },
 
     _onTrayIconAdded: function(o, icon, role) {
+        Mainloop.idle_add(Lang.bind(this, this._queAddToTray, icon, role));
+    },
+    
+    _queAddToTray: function(icon, role) {
         try {
             let hiddenIcons = Main.systrayManager.getRoles();
             let buggyIcons = ["pidgin", "thunderbird"];
