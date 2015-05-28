@@ -230,6 +230,7 @@ MyApplet.prototype = {
 
     on_applet_added_to_panel: function() {
         this.on_orientation_changed(this._orientation);
+        Mainloop.idle_add(Lang.bind(this, this._show_hide_tray));
     },
 
     on_orientation_changed: function (orientation) {
