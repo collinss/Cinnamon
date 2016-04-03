@@ -181,28 +181,28 @@ class Module:
 
             self.sidePage.stack.add_titled(page, "settings", _("Settings"))
 
-            widget = GSettingsSwitch(_("Play backgrounds as a slideshow"), "org.cinnamon.desktop.background.slideshow", "slideshow-enabled")
+            widget = g_settings_factory(Switch, _("Play backgrounds as a slideshow"), "org.cinnamon.desktop.background.slideshow", "slideshow-enabled")
             settings.add_row(widget)
 
-            widget = GSettingsSpinButton(_("Delay"), "org.cinnamon.desktop.background.slideshow", "delay", _("minutes"), 1, 120)
+            widget = g_settings_factory(SpinButton, _("Delay"), "org.cinnamon.desktop.background.slideshow", "delay", _("minutes"), 1, 120)
             settings.add_reveal_row(widget, "org.cinnamon.desktop.background.slideshow", "slideshow-enabled")
 
-            widget = GSettingsSwitch(_("Play images in random order"), "org.cinnamon.desktop.background.slideshow", "random-order")
+            widget = g_settings_factory(Switch, _("Play images in random order"), "org.cinnamon.desktop.background.slideshow", "random-order")
             settings.add_reveal_row(widget, "org.cinnamon.desktop.background.slideshow", "slideshow-enabled")
 
-            widget = GSettingsComboBox(_("Picture aspect"), "org.cinnamon.desktop.background", "picture-options", BACKGROUND_PICTURE_OPTIONS, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Picture aspect"), "org.cinnamon.desktop.background", "picture-options", BACKGROUND_PICTURE_OPTIONS, size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsComboBox(_("Background gradient"), "org.cinnamon.desktop.background", "color-shading-type", BACKGROUND_COLOR_SHADING_TYPES, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Background gradient"), "org.cinnamon.desktop.background", "color-shading-type", BACKGROUND_COLOR_SHADING_TYPES, size_group=size_group)
             settings.add_reveal_row(widget, "org.cinnamon.desktop.background", "picture-options", PICTURE_OPTIONS_NEEDS_COLOR)
 
-            widget = GSettingsColorChooser(_("Gradient start color"), "org.cinnamon.desktop.background", "primary-color", size_group=size_group)
+            widget = g_settings_factory(ColorChooser, _("Gradient start color"), "org.cinnamon.desktop.background", "primary-color", size_group=size_group)
             settings.add_reveal_row(widget, "org.cinnamon.desktop.background", "picture-options", PICTURE_OPTIONS_NEEDS_COLOR)
 
             self._background_schema.connect("changed::picture-options", self.update_secondary_revealer)
             self._background_schema.connect("changed::color-shading-type", self.update_secondary_revealer)
 
-            widget = GSettingsColorChooser(_("Gradient end color"), "org.cinnamon.desktop.background", "secondary-color", size_group=size_group)
+            widget = g_settings_factory(ColorChooser, _("Gradient end color"), "org.cinnamon.desktop.background", "secondary-color", size_group=size_group)
             self.secondary_color_revealer = settings.add_reveal_row(widget)
 
             self.update_secondary_revealer(self._background_schema, None)

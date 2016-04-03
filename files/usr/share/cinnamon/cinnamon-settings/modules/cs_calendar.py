@@ -30,8 +30,8 @@ class Module:
                 print detail
 
             settings = page.add_section(_("Format"))
-            settings.add_row(GSettingsSwitch(_("Use 24h clock"), "org.cinnamon.desktop.interface", "clock-use-24h"))
-            settings.add_row(GSettingsSwitch(_("Display the date"), "org.cinnamon.desktop.interface", "clock-show-date"))
-            settings.add_row(GSettingsSwitch(_("Display seconds"), "org.cinnamon.desktop.interface", "clock-show-seconds"))
+            settings.add_row(g_settings_factory(Switch, _("Use 24h clock"), "org.cinnamon.desktop.interface", "clock-use-24h"))
+            settings.add_row(g_settings_factory(Switch, _("Display the date"), "org.cinnamon.desktop.interface", "clock-show-date"))
+            settings.add_row(g_settings_factory(Switch, _("Display seconds"), "org.cinnamon.desktop.interface", "clock-show-seconds"))
             days = [[7, _("Use locale default")], [0, _("Sunday")], [1, _("Monday")]]
-            settings.add_row(GSettingsComboBox(_("First day of week"), "org.cinnamon.desktop.interface", "first-day-of-week", days, valtype="int"))
+            settings.add_row(g_settings_factory(ComboBox, _("First day of week"), "org.cinnamon.desktop.interface", "first-day-of-week", days, valtype="int"))

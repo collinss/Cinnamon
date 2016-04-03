@@ -26,33 +26,33 @@ class Module:
 
             settings = page.add_section(_("General"))
 
-            switch = GSettingsSwitch(_("Left handed (mouse buttons inverted)"), "org.cinnamon.settings-daemon.peripherals.mouse", "left-handed")
+            switch = g_settings_factory(Switch, _("Left handed (mouse buttons inverted)"), "org.cinnamon.settings-daemon.peripherals.mouse", "left-handed")
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Show position of pointer when the Control key is pressed"), "org.cinnamon.settings-daemon.peripherals.mouse", "locate-pointer")
+            switch = g_settings_factory(Switch, _("Show position of pointer when the Control key is pressed"), "org.cinnamon.settings-daemon.peripherals.mouse", "locate-pointer")
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Emulate middle click by clicking both left and right buttons"), "org.cinnamon.settings-daemon.peripherals.mouse", "middle-button-enabled")
+            switch = g_settings_factory(Switch, _("Emulate middle click by clicking both left and right buttons"), "org.cinnamon.settings-daemon.peripherals.mouse", "middle-button-enabled")
             settings.add_row(switch)
 
-            spin = GSettingsSpinButton(_("Drag-and-drop threshold"), "org.cinnamon.settings-daemon.peripherals.mouse", "drag-threshold", _("pixels"), 1, 400)
+            spin = g_settings_factory(SpinButton, _("Drag-and-drop threshold"), "org.cinnamon.settings-daemon.peripherals.mouse", "drag-threshold", _("pixels"), 1, 400)
             settings.add_row(spin)
 
             settings = page.add_section(_("Pointer size and speed"))
 
-            widget = GSettingsRange(_("Size"), "org.cinnamon.desktop.interface", "cursor-size", _("Smaller"), _("Larger"), 5, 50)
+            widget = g_settings_factory(Range, _("Size"), "org.cinnamon.desktop.interface", "cursor-size", _("Smaller"), _("Larger"), 5, 50)
             widget.add_mark(24.0, Gtk.PositionType.TOP, None)
             settings.add_row(widget)
 
-            slider = GSettingsRange(_("Acceleration"), "org.cinnamon.settings-daemon.peripherals.mouse", "motion-acceleration", _("Slow"), _("Fast"), 1, 10)
+            slider = g_settings_factory(Range, _("Acceleration"), "org.cinnamon.settings-daemon.peripherals.mouse", "motion-acceleration", _("Slow"), _("Fast"), 1, 10)
             settings.add_row(slider)
 
-            slider = GSettingsRange(_("Sensitivity"), "org.cinnamon.settings-daemon.peripherals.mouse", "motion-threshold", _("Low"), _("High"), 1, 10, invert=True)
+            slider = g_settings_factory(Range, _("Sensitivity"), "org.cinnamon.settings-daemon.peripherals.mouse", "motion-threshold", _("Low"), _("High"), 1, 10, invert=True)
             settings.add_row(slider)
 
             settings = page.add_section(_("Double-Click timeout"))
 
-            slider = GSettingsRange(_("Timeout"), "org.cinnamon.settings-daemon.peripherals.mouse", "double-click", _("Short"), _("Long"), 100, 1000)
+            slider = g_settings_factory(Range, _("Timeout"), "org.cinnamon.settings-daemon.peripherals.mouse", "double-click", _("Short"), _("Long"), 100, 1000)
             settings.add_row(slider)
 
             box = SettingsWidget()
@@ -67,7 +67,7 @@ class Module:
 
             page = SettingsPage()
 
-            switch = GSettingsSwitch("", "org.cinnamon.settings-daemon.peripherals.touchpad", "touchpad-enabled")
+            switch = g_settings_factory(Switch, "", "org.cinnamon.settings-daemon.peripherals.touchpad", "touchpad-enabled")
             switch.label.set_markup("<b>%s</b>" % _("Enable touchpad"))
             switch.fill_row()
             page.pack_start(switch, False, True, 0)
@@ -78,42 +78,42 @@ class Module:
             settings = SettingsBox(_("General"))
             revealer.add(settings)
 
-            switch = GSettingsSwitch(_("Tap to click"), "org.cinnamon.settings-daemon.peripherals.touchpad", "tap-to-click")
+            switch = g_settings_factory(Switch, _("Tap to click"), "org.cinnamon.settings-daemon.peripherals.touchpad", "tap-to-click")
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Disable touchpad while typing"), "org.cinnamon.settings-daemon.peripherals.touchpad", "disable-while-typing")
+            switch = g_settings_factory(Switch, _("Disable touchpad while typing"), "org.cinnamon.settings-daemon.peripherals.touchpad", "disable-while-typing")
             settings.add_row(switch)
 
             button_list = [[0, _("Disabled")], [1, _("Left button")], [2, _("Middle button")], [3, _("Right button")]]
 
-            combo = GSettingsComboBox(_("Two-finger click emulation:"), "org.cinnamon.settings-daemon.peripherals.touchpad", "two-finger-click", button_list, valtype="int")
+            combo = g_settings_factory(ComboBox, _("Two-finger click emulation:"), "org.cinnamon.settings-daemon.peripherals.touchpad", "two-finger-click", button_list, valtype="int")
             settings.add_row(combo)
 
-            combo = GSettingsComboBox(_("Three-finger click emulation:"), "org.cinnamon.settings-daemon.peripherals.touchpad", "three-finger-click", button_list, valtype="int")
+            combo = g_settings_factory(ComboBox, _("Three-finger click emulation:"), "org.cinnamon.settings-daemon.peripherals.touchpad", "three-finger-click", button_list, valtype="int")
             settings.add_row(combo)
 
             settings = SettingsBox(_("Scrolling"))
             revealer.add(settings)
 
-            switch = GSettingsSwitch(_("Natural scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "natural-scroll")
+            switch = g_settings_factory(Switch, _("Natural scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "natural-scroll")
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Vertical edge scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "vertical-edge-scrolling")
+            switch = g_settings_factory(Switch, _("Vertical edge scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "vertical-edge-scrolling")
             settings.add_row(switch)
-            switch = GSettingsSwitch(_("Horizontal edge scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "horizontal-edge-scrolling")
+            switch = g_settings_factory(Switch, _("Horizontal edge scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "horizontal-edge-scrolling")
             settings.add_row(switch)
-            switch = GSettingsSwitch(_("Vertical two-finger scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "vertical-two-finger-scrolling")
+            switch = g_settings_factory(Switch, _("Vertical two-finger scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "vertical-two-finger-scrolling")
             settings.add_row(switch)
-            switch = GSettingsSwitch(_("Horizontal two-finger scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "horizontal-two-finger-scrolling")
+            switch = g_settings_factory(Switch, _("Horizontal two-finger scrolling"), "org.cinnamon.settings-daemon.peripherals.touchpad", "horizontal-two-finger-scrolling")
             settings.add_row(switch)
 
             settings = SettingsBox(_("Pointer speed"))
             revealer.add(settings)
 
-            slider = GSettingsRange(_("Acceleration"), "org.cinnamon.settings-daemon.peripherals.touchpad", "motion-acceleration", _("Slow"), _("Fast"), 1, 10)
+            slider = g_settings_factory(Range, _("Acceleration"), "org.cinnamon.settings-daemon.peripherals.touchpad", "motion-acceleration", _("Slow"), _("Fast"), 1, 10)
             settings.add_row(slider)
 
-            slider = GSettingsRange(_("Sensitivity"), "org.cinnamon.settings-daemon.peripherals.touchpad", "motion-threshold", _("Low"), _("High"), 1, 10)
+            slider = g_settings_factory(Range, _("Sensitivity"), "org.cinnamon.settings-daemon.peripherals.touchpad", "motion-threshold", _("Low"), _("High"), 1, 10)
             settings.add_row(slider)
 
             self.sidePage.stack.add_titled(page, "touchpad", _("Touchpad"))

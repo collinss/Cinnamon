@@ -58,10 +58,10 @@ class Module:
 
             settings = page.add_section(_("Options"))
 
-            widget = GSettingsSwitch(_("Show icons in menus"), "org.cinnamon.settings-daemon.plugins.xsettings", "menus-have-icons")
+            widget = g_settings_factory(Switch, _("Show icons in menus"), "org.cinnamon.settings-daemon.plugins.xsettings", "menus-have-icons")
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Show icons on buttons"), "org.cinnamon.settings-daemon.plugins.xsettings", "buttons-have-icons")
+            widget = g_settings_factory(Switch, _("Show icons on buttons"), "org.cinnamon.settings-daemon.plugins.xsettings", "buttons-have-icons")
             settings.add_row(widget)
 
             self.builder = self.sidePage.builder

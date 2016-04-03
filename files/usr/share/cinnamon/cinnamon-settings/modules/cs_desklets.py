@@ -44,7 +44,7 @@ class DeskletsViewSidePage (ExtensionSidePage):
 
         dec = [[0, _("No decoration")], [1, _("Border only")], [2, _("Border and header")]]
         widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        combo_box = GSettingsComboBox(_("Decoration of desklets"), "org.cinnamon", "desklet-decorations", dec, valtype="int")
+        combo_box = g_settings_factory(ComboBox, _("Decoration of desklets"), "org.cinnamon", "desklet-decorations", dec, valtype="int")
         widget.pack_start(combo_box, False, False, 0)
         line1 = Gtk.Label()
         line1.set_markup("<i><small>%s</small></i>" % _("Note: Some desklets require the border/header to be always present"))
@@ -56,7 +56,7 @@ class DeskletsViewSidePage (ExtensionSidePage):
         widget.pack_start(line2, True, True, 0)
         settings.add_row(widget)
 
-        settings.add_row(GSettingsSwitch(_("Snap desklets to grid"), "org.cinnamon", "desklet-snap"))
-        settings.add_reveal_row(GSettingsSpinButton(_("Width of desklet snap grid"), "org.cinnamon", "desklet-snap-interval", "", 0, 100, 1, 5), "org.cinnamon", "desklet-snap")
+        settings.add_row(g_settings_factory(Switch, _("Snap desklets to grid"), "org.cinnamon", "desklet-snap"))
+        settings.add_reveal_row(g_settings_factory(SpinButton, _("Width of desklet snap grid"), "org.cinnamon", "desklet-snap-interval", "", 0, 100, 1, 5), "org.cinnamon", "desklet-snap")
 
         return page

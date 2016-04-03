@@ -219,21 +219,21 @@ class Module:
 
             self.sidePage.stack.add_titled(page, "typing", _("Typing"))
 
-            switch = GSettingsSwitch(_("Enable key repeat"), "org.cinnamon.settings-daemon.peripherals.keyboard", "repeat")
+            switch = g_settings_factory(Switch, _("Enable key repeat"), "org.cinnamon.settings-daemon.peripherals.keyboard", "repeat")
             settings.add_row(switch)
 
-            slider = GSettingsRange(_("Repeat delay:"), "org.cinnamon.settings-daemon.peripherals.keyboard", "delay", _("Short"), _("Long"), 100, 2000)
+            slider = g_settings_factory(Range, _("Repeat delay:"), "org.cinnamon.settings-daemon.peripherals.keyboard", "delay", _("Short"), _("Long"), 100, 2000)
             settings.add_reveal_row(slider, "org.cinnamon.settings-daemon.peripherals.keyboard", "repeat")
 
-            slider = GSettingsRange(_("Repeat speed:"), "org.cinnamon.settings-daemon.peripherals.keyboard", "repeat-interval", _("Slow"), _("Fast"), 20, 2000, invert=True, log=True)
+            slider = g_settings_factory(Range, _("Repeat speed:"), "org.cinnamon.settings-daemon.peripherals.keyboard", "repeat-interval", _("Slow"), _("Fast"), 20, 2000, invert=True, log=True)
             settings.add_reveal_row(slider, "org.cinnamon.settings-daemon.peripherals.keyboard", "repeat")
 
             settings = page.add_section(_("Text cursor"))
 
-            switch = GSettingsSwitch(_("Text cursor blinks"), "org.cinnamon.desktop.interface", "cursor-blink")
+            switch = g_settings_factory(Switch, _("Text cursor blinks"), "org.cinnamon.desktop.interface", "cursor-blink")
             settings.add_row(switch)
 
-            slider = GSettingsRange(_("Blink speed:"), "org.cinnamon.desktop.interface", "cursor-blink-time", _("Slow"), _("Fast"), 100, 2500, invert=True)
+            slider = g_settings_factory(Range, _("Blink speed:"), "org.cinnamon.desktop.interface", "cursor-blink-time", _("Slow"), _("Fast"), 100, 2500, invert=True)
             settings.add_reveal_row(slider, "org.cinnamon.desktop.interface", "cursor-blink")
 
             # vbox.add(Gtk.Label.new(_("Test Box")))

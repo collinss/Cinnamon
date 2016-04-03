@@ -24,14 +24,15 @@ class Module:
             page = SettingsPage()
             self.sidePage.add_widget(page)
 
-            switch = GSettingsSwitch("", PRIVACY_SCHEMA, GTK_RECENT_ENABLE_KEY)
+            switch = g_settings_factory(Switch, "", PRIVACY_SCHEMA, GTK_RECENT_ENABLE_KEY)
             switch.label.set_markup("<b>%s</b>" % _("Remember recently accessed files"))
             switch.fill_row()
             page.add(switch)
 
             settings = page.add_reveal_section(_("Recent files"), PRIVACY_SCHEMA, GTK_RECENT_ENABLE_KEY)
 
-            self.indefinite_switch = GSettingsSwitch(_("Never forget old files"))
+            self.indefinite_switch = Switch()
+            self.indefinite_switch.build_widget(_("Never forget old files"))
             self.indefinite_switch.content_widget.connect("notify::active", self.on_indefinite_toggled)
             settings.add_row(self.indefinite_switch)
 

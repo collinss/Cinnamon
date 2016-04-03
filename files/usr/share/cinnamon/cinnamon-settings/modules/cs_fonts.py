@@ -25,19 +25,19 @@ class Module:
 
             size_group = Gtk.SizeGroup.new(Gtk.SizeGroupMode.HORIZONTAL)
 
-            widget = GSettingsFontButton(_("Default font"), "org.cinnamon.desktop.interface", "font-name", size_group=size_group)
+            widget = g_settings_factory(FontButton, _("Default font"), "org.cinnamon.desktop.interface", "font-name", size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsFontButton(_("Desktop font"), "org.nemo.desktop", "font", size_group=size_group)
+            widget = g_settings_factory(FontButton, _("Desktop font"), "org.nemo.desktop", "font", size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsFontButton(_("Document font"), "org.gnome.desktop.interface", "document-font-name", size_group=size_group)
+            widget = g_settings_factory(FontButton, _("Document font"), "org.gnome.desktop.interface", "document-font-name", size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsFontButton(_("Monospace font"), "org.gnome.desktop.interface", "monospace-font-name", size_group=size_group)
+            widget = g_settings_factory(FontButton, _("Monospace font"), "org.gnome.desktop.interface", "monospace-font-name", size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsFontButton(_("Window title font"), "org.cinnamon.desktop.wm.preferences", "titlebar-font", size_group=size_group)
+            widget = g_settings_factory(FontButton, _("Window title font"), "org.cinnamon.desktop.wm.preferences", "titlebar-font", size_group=size_group)
             settings.add_row(widget)
 
             settings = page.add_section(_("Font Settings"))
@@ -46,13 +46,13 @@ class Module:
             hinting_options = [["none", _("None")], ["slight", _("Slight")], ["medium", _("Medium")], ["full", _("Full")]]
 
             size_group = Gtk.SizeGroup.new(Gtk.SizeGroupMode.HORIZONTAL)
-            widget = GSettingsSpinButton(_("Text scaling factor"), "org.cinnamon.desktop.interface", "text-scaling-factor", step=0.1, size_group=size_group)
+            widget = g_settings_factory(SpinButton, _("Text scaling factor"), "org.cinnamon.desktop.interface", "text-scaling-factor", step=0.1, size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsComboBox(_("Antialiasing"), "org.cinnamon.settings-daemon.plugins.xsettings", "antialiasing", aa_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Antialiasing"), "org.cinnamon.settings-daemon.plugins.xsettings", "antialiasing", aa_options, size_group=size_group)
             widget.set_tooltip_text(_("Antialiasing makes on screen text smoother and easier to read"))
             settings.add_row(widget)
 
-            widget = GSettingsComboBox(_("Hinting"), "org.cinnamon.settings-daemon.plugins.xsettings", "hinting", hinting_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Hinting"), "org.cinnamon.settings-daemon.plugins.xsettings", "hinting", hinting_options, size_group=size_group)
             widget.set_tooltip_text(_("Hinting allows for producing clear, legible text on screen."))
             settings.add_row(widget)

@@ -42,20 +42,16 @@ class Module:
 
             settings = page.add_section(_("Visual Aids"))
 
-            switch = GSettingsSwitch(_("High contrast"))
-            self.iface_settings.bind_with_mapping(KEY_GTK_THEME,
-                                                  switch.content_widget, "active",
-                                                  Gio.SettingsBindFlags.DEFAULT,
-                                                  self.hi_con_get_mapping,
-                                                  self.hi_con_set_mapping)
+            switch = g_settings_factory(Switch, _("High contrast"), 
+                                        "org.cinnamon.desktop.interface", "gtk-theme",
+                                        map_get=self.hi_con_get_mapping,
+                                        map_set=self.hi_con_set_mapping)
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Large text"))
-            self.iface_settings.bind_with_mapping(KEY_TEXT_SCALING_FACTOR,
-                                                  switch.content_widget, "active",
-                                                  Gio.SettingsBindFlags.DEFAULT,
-                                                  self.lg_text_get_mapping,
-                                                  self.lg_text_set_mapping)
+            switch = g_settings_factory(Switch, _("Large text"), 
+                                        "org.cinnamon.desktop.interface", "text-scaling-factor",
+                                        map_get=self.hi_con_get_mapping,
+                                        map_set=self.hi_con_set_mapping)
             settings.add_row(switch)
 
             switch = GSettingsDependencySwitch(_("Screen reader"),
@@ -69,28 +65,28 @@ class Module:
 
             settings = page.add_section(_("Desktop Zoom"))
 
-            switch = GSettingsSwitch(_("Enable zoom"), "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
+            switch = g_settings_factory(Switch, _("Enable zoom"), "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
             settings.add_row(switch)
 
-            spin = GSettingsSpinButton(_("Magnification"), "org.cinnamon.desktop.a11y.magnifier", "mag-factor", None, 1.0, 15.0, step=0.5)
+            spin = g_settings_factory(SpinButton, _("Magnification"), "org.cinnamon.desktop.a11y.magnifier", "mag-factor", None, 1.0, 15.0, step=0.5)
             settings.add_reveal_row(spin, "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
 
             zoom_key_options = [["", _("Disabled")], ["<Alt>", "<Alt>"],["<Super>", "<Super>"],["<Control>", "<Control>"]]
-            widget = GSettingsComboBox(_("Mouse wheel modifier"), "org.cinnamon.desktop.wm.preferences", "mouse-button-zoom-modifier", zoom_key_options)
+            widget = g_settings_factory(ComboBox, _("Mouse wheel modifier"), "org.cinnamon.desktop.wm.preferences", "mouse-button-zoom-modifier", zoom_key_options)
             widget.set_tooltip_text(_("While this modifier is pressed, mouse scrolling will increase or decrease zoom."))
             settings.add_reveal_row(widget, "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
 
-            switch = GSettingsSwitch(_("Scroll at screen edges"), "org.cinnamon.desktop.a11y.magnifier", "scroll-at-edges")
+            switch = g_settings_factory(Switch, _("Scroll at screen edges"), "org.cinnamon.desktop.a11y.magnifier", "scroll-at-edges")
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
 
             mouse_track_options = [["centered",     _("Keep cursor centered")],
                                    ["proportional", _("Cursor moves with contents")],
                                    ["push",         _("Cursor pushes contents around")]]
 
-            widget = GSettingsComboBox(_("Mouse tracking mode"), "org.cinnamon.desktop.a11y.magnifier", "mouse-tracking", mouse_track_options)
+            widget = g_settings_factory(ComboBox, _("Mouse tracking mode"), "org.cinnamon.desktop.a11y.magnifier", "mouse-tracking", mouse_track_options)
             settings.add_reveal_row(widget, "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
 
-            switch = GSettingsSwitch(_("Lens mode"), "org.cinnamon.desktop.a11y.magnifier", "lens-mode")
+            switch = g_settings_factory(Switch, _("Lens mode"), "org.cinnamon.desktop.a11y.magnifier", "lens-mode")
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
 
             self.zoom_stack = SettingsStack()
@@ -100,7 +96,7 @@ class Module:
                                   ["horizontal",      _("Horizontal strip")],
                                   ["vertical",        _("Vertical strip")]]
 
-            widget = GSettingsComboBox(_("Lens shape"), "org.cinnamon.desktop.a11y.magnifier", "lens-shape", lens_shape_options)
+            widget = g_settings_factory(ComboBox, _("Lens shape"), "org.cinnamon.desktop.a11y.magnifier", "lens-shape", lens_shape_options)
             self.zoom_stack.add_named(widget, "shape")
 
             screen_pos_options = [["full-screen",     _("Full screen")],
@@ -109,7 +105,7 @@ class Module:
                                   ["left-half",       _("Left half")],
                                   ["right-half",      _("Right half")]]
 
-            widget = GSettingsComboBox(_("Screen position"), "org.cinnamon.desktop.a11y.magnifier", "screen-position", screen_pos_options)
+            widget = g_settings_factory(ComboBox, _("Screen position"), "org.cinnamon.desktop.a11y.magnifier", "screen-position", screen_pos_options)
             self.zoom_stack.add_named(widget, "screen")
 
             settings.add_reveal_row(self.zoom_stack, "org.cinnamon.desktop.a11y.applications", "screen-magnifier-enabled")
@@ -134,10 +130,9 @@ class Module:
 
             settings = page.add_section(_("Virtual keyboard"))
 
-            switch = GSettingsSwitch(_("Enable the on-screen keyboard"),
-                                     "org.cinnamon.desktop.a11y.applications",
-                                     "screen-keyboard-enabled",
-                                     None)
+            switch = g_settings_factory(Switch, _("Enable the on-screen keyboard"),
+                                        "org.cinnamon.desktop.a11y.applications",
+                                        "screen-keyboard-enabled")
 
             settings.add_row(switch)
 
@@ -145,38 +140,38 @@ class Module:
                                      ["fullscale", _("Full scale")],
                                      ["scan",      _("Scanning")]]
 
-            widget = GSettingsComboBox(_("Keyboard layout"), "org.cinnamon.keyboard", "keyboard-type", keyboard_type_options)
+            widget = g_settings_factory(ComboBox, _("Keyboard layout"), "org.cinnamon.keyboard", "keyboard-type", keyboard_type_options)
             settings.add_reveal_row(widget, "org.cinnamon.desktop.a11y.applications", "screen-keyboard-enabled")
 
 # Keyboard indicators
 
             settings = page.add_section(_("Keyboard indicators"))
 
-            switch = GSettingsSwitch(_("Use visual indicator on Caps and Num Lock"),
+            switch = g_settings_factory(Switch, _("Use visual indicator on Caps and Num Lock"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "togglekeys-enable-osd")
 
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Use audio indicator on Caps and Num Lock"),
+            switch = g_settings_factory(Switch, _("Use audio indicator on Caps and Num Lock"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "togglekeys-enable-beep")
 
             settings.add_row(switch)
 
-            sound_picker = GSettingsSoundFileChooser(_("Sound to use Caps or Num Lock on"),
+            sound_picker = g_settings_factory(SoundFileChooser, _("Sound to use Caps or Num Lock on"),
                                                      "org.cinnamon.desktop.a11y.keyboard",
                                                      "togglekeys-sound-on")
             settings.add_reveal_row(sound_picker, "org.cinnamon.desktop.a11y.keyboard", "togglekeys-enable-beep")
 
-            sound_picker = GSettingsSoundFileChooser(_("Sound to use Caps or Num Lock off"),
+            sound_picker = g_settings_factory(SoundFileChooser, _("Sound to use Caps or Num Lock off"),
                                                      "org.cinnamon.desktop.a11y.keyboard",
                                                      "togglekeys-sound-off")
             settings.add_reveal_row(sound_picker, "org.cinnamon.desktop.a11y.keyboard", "togglekeys-enable-beep")
 
             settings = page.add_section(_("Event feedback (required for typing assistance alerts)"))
 
-            switch = GSettingsSwitch(_("Enable visual alerts"),
+            switch = g_settings_factory(Switch, _("Enable visual alerts"),
                                      "org.cinnamon.desktop.wm.preferences",
                                      "visual-bell")
             settings.add_row(switch)
@@ -184,15 +179,15 @@ class Module:
             visual_bell_options = [["fullscreen-flash",     _("Flash the entire monitor")],
                                    ["frame-flash", _("Flash the active window")]]
 
-            widget = GSettingsComboBox(_("Visual style"), "org.cinnamon.desktop.wm.preferences", "visual-bell-type", visual_bell_options)
+            widget = g_settings_factory(ComboBox, _("Visual style"), "org.cinnamon.desktop.wm.preferences", "visual-bell-type", visual_bell_options)
             settings.add_reveal_row(widget, "org.cinnamon.desktop.wm.preferences", "visual-bell")
 
-            switch = GSettingsSwitch(_("Enable audio alerts"),
+            switch = g_settings_factory(Switch, _("Enable audio alerts"),
                                      "org.cinnamon.desktop.wm.preferences",
                                      "audible-bell")
             settings.add_row(switch)
 
-            sound_picker = GSettingsSoundFileChooser(_("Sound to use for window alerts"),
+            sound_picker = g_settings_factory(SoundFileChooser, _("Sound to use for window alerts"),
                                                      "org.cinnamon.desktop.wm.preferences",
                                                      "bell-sound")
             settings.add_reveal_row(sound_picker, "org.cinnamon.desktop.wm.preferences", "audible-bell")
@@ -206,24 +201,22 @@ class Module:
 
             settings = page.add_section(_("Sticky keys"))
 
-            switch = GSettingsSwitch(_("Treat a sequence of modifier keys as a combination"),
+            switch = g_settings_factory(Switch, _("Treat a sequence of modifier keys as a combination"),
                                      "org.cinnamon.desktop.a11y.keyboard",
-                                     "stickykeys-enable",
-                                     None)
+                                     "stickykeys-enable")
 
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Disable if two modifiers are pressed together"),
+            switch = g_settings_factory(Switch, _("Disable if two modifiers are pressed together"),
                                      "org.cinnamon.desktop.a11y.keyboard",
-                                     "stickykeys-two-key-off",
-                                     None)
+                                     "stickykeys-two-key-off")
 
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.keyboard", "stickykeys-enable")
 
-            switch = GSettingsSwitch(_("Alert when a modifier key is pressed"),
+            switch = g_settings_factory(Switch, _("Alert when a modifier key is pressed"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "stickykeys-modifier-beep",
-                                     "org.cinnamon.desktop.sound/event-sounds")
+                                     dep_key="org.cinnamon.desktop.sound/event-sounds")
 
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.keyboard", "stickykeys-enable")
 
@@ -231,35 +224,34 @@ class Module:
 
             settings = page.add_section(_("Slow keys"))
 
-            switch = GSettingsSwitch(_("Put a delay between when a key is pressed and when it is accepted"),
+            switch = g_settings_factory(Switch, _("Put a delay between when a key is pressed and when it is accepted"),
                                      "org.cinnamon.desktop.a11y.keyboard",
-                                     "slowkeys-enable",
-                                     None)
+                                     "slowkeys-enable")
 
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Alert when a key is pressed"),
+            switch = g_settings_factory(Switch, _("Alert when a key is pressed"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "slowkeys-beep-press",
-                                     "org.cinnamon.desktop.sound/event-sounds")
+                                     dep_key="org.cinnamon.desktop.sound/event-sounds")
 
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.keyboard", "slowkeys-enable")
 
-            switch = GSettingsSwitch(_("Alert when a key is accepted"),
+            switch = g_settings_factory(Switch, _("Alert when a key is accepted"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "slowkeys-beep-accept",
-                                     "org.cinnamon.desktop.sound/event-sounds")
+                                     dep_key="org.cinnamon.desktop.sound/event-sounds")
 
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.keyboard", "slowkeys-enable")
 
-            switch = GSettingsSwitch(_("Alert when a key is rejected"),
+            switch = g_settings_factory(Switch, _("Alert when a key is rejected"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "slowkeys-beep-reject",
-                                     "org.cinnamon.desktop.sound/event-sounds")
+                                     dep_key="org.cinnamon.desktop.sound/event-sounds")
 
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.keyboard", "slowkeys-enable")
 
-            slider = GSettingsRange(_("Acceptance delay"),
+            slider = g_settings_factory(Range, _("Acceptance delay"),
                                     "org.cinnamon.desktop.a11y.keyboard",
                                     "slowkeys-delay",
                                     _("Short"), _("Long"),
@@ -271,21 +263,20 @@ class Module:
 
             settings = page.add_section(_("Bounce keys"))
 
-            switch = GSettingsSwitch(_("Ignore fast duplicate keypresses"),
+            switch = g_settings_factory(Switch, _("Ignore fast duplicate keypresses"),
                                      "org.cinnamon.desktop.a11y.keyboard",
-                                     "bouncekeys-enable",
-                                     None)
+                                     "bouncekeys-enable")
 
             settings.add_row(switch)
 
-            switch = GSettingsSwitch(_("Alert when a key is rejected"),
+            switch = g_settings_factory(Switch, _("Alert when a key is rejected"),
                                      "org.cinnamon.desktop.a11y.keyboard",
                                      "bouncekeys-beep-reject",
-                                     "org.cinnamon.desktop.sound/event-sounds")
+                                     dep_key="org.cinnamon.desktop.sound/event-sounds")
 
             settings.add_reveal_row(switch, "org.cinnamon.desktop.a11y.keyboard", "bouncekeys-enable")
 
-            slider = GSettingsRange(_("Acceptance delay"),
+            slider = g_settings_factory(Range, _("Acceptance delay"),
                                     "org.cinnamon.desktop.a11y.keyboard",
                                     "bouncekeys-delay",
                                     _("Short"), _("Long"),
@@ -302,14 +293,13 @@ class Module:
 
             settings = page.add_section(_("Mouse keys"))
 
-            switch = GSettingsSwitch(_("Control the pointer using the keypad"),
+            switch = g_settings_factory(Switch, _("Control the pointer using the keypad"),
                                      "org.cinnamon.desktop.a11y.keyboard",
-                                     "mousekeys-enable",
-                                     None)
+                                     "mousekeys-enable")
 
             settings.add_row(switch)
 
-            slider = GSettingsRange(_("Initial delay"),
+            slider = g_settings_factory(Range, _("Initial delay"),
                                     "org.cinnamon.desktop.a11y.keyboard",
                                     "mousekeys-init-delay",
                                     _("Shorter"), _("Longer"),
@@ -317,7 +307,7 @@ class Module:
 
             settings.add_reveal_row(slider, "org.cinnamon.desktop.a11y.keyboard", "mousekeys-enable")
 
-            slider = GSettingsRange(_("Acceleration time"),
+            slider = g_settings_factory(Range, _("Acceleration time"),
                                     "org.cinnamon.desktop.a11y.keyboard",
                                     "mousekeys-accel-time",
                                     _("Shorter"), _("Longer"),
@@ -325,7 +315,7 @@ class Module:
 
             settings.add_reveal_row(slider, "org.cinnamon.desktop.a11y.keyboard", "mousekeys-enable")
 
-            slider = GSettingsRange(_("Maximum speed"),
+            slider = g_settings_factory(Range, _("Maximum speed"),
                                     "org.cinnamon.desktop.a11y.keyboard",
                                     "mousekeys-max-speed",
                                     _("Slower"), _("Faster"),
@@ -357,14 +347,13 @@ class Module:
             settings = page.add_reveal_section(_("Simulated secondary click"))
             self.ssc_section = settings
 
-            switch = GSettingsSwitch(_("Trigger a secondary click by holding down the primary button"),
+            switch = g_settings_factory(Switch, _("Trigger a secondary click by holding down the primary button"),
                                      "org.cinnamon.desktop.a11y.mouse",
-                                     "secondary-click-enabled",
-                                     None)
+                                     "secondary-click-enabled")
 
             settings.add_row(switch)
 
-            slider = GSettingsRange(_("Acceptance delay"),
+            slider = g_settings_factory(Range, _("Acceptance delay"),
                                     "org.cinnamon.desktop.a11y.mouse",
                                     "secondary-click-time",
                                     _("Shorter"), _("Longer"),
@@ -377,14 +366,13 @@ class Module:
             settings = page.add_reveal_section(_("Hover click"))
             self.hc_section = settings
 
-            switch = GSettingsSwitch(_("Trigger a click when the pointer hovers"),
+            switch = g_settings_factory(Switch, _("Trigger a click when the pointer hovers"),
                                      "org.cinnamon.desktop.a11y.mouse",
-                                     "dwell-click-enabled",
-                                     None)
+                                     "dwell-click-enabled")
 
             settings.add_row(switch)
 
-            slider = GSettingsRange(_("Delay"),
+            slider = g_settings_factory(Range, _("Delay"),
                                     "org.cinnamon.desktop.a11y.mouse",
                                     "dwell-time",
                                     _("Short"), _("Long"),
@@ -392,7 +380,7 @@ class Module:
 
             settings.add_reveal_row(slider, "org.cinnamon.desktop.a11y.mouse", "dwell-click-enabled")
 
-            slider = GSettingsRange(_("Motion threshold"),
+            slider = g_settings_factory(Range, _("Motion threshold"),
                                     "org.cinnamon.desktop.a11y.mouse",
                                     "dwell-threshold",
                                     _("Small"), _("Large"),

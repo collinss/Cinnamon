@@ -50,16 +50,16 @@ class Module:
 
         settings = page.add_section(_("Notification settings"))
 
-        switch = GSettingsSwitch(_("Enable notifications"), "org.cinnamon.desktop.notifications", "display-notifications")
+        switch = g_settings_factory(Switch, _("Enable notifications"), "org.cinnamon.desktop.notifications", "display-notifications")
         settings.add_row(switch)
 
-        switch = GSettingsSwitch(_("Remove notifications after their timeout is reached"), "org.cinnamon.desktop.notifications", "remove-old")
+        switch = g_settings_factory(Switch, _("Remove notifications after their timeout is reached"), "org.cinnamon.desktop.notifications", "remove-old")
         settings.add_reveal_row(switch, "org.cinnamon.desktop.notifications", "display-notifications")
 
-        switch = GSettingsSwitch(_("Have notifications fade out when hovered over"), "org.cinnamon.desktop.notifications", "fade-on-mouseover")
+        switch = g_settings_factory(Switch, _("Have notifications fade out when hovered over"), "org.cinnamon.desktop.notifications", "fade-on-mouseover")
         settings.add_reveal_row(switch, "org.cinnamon.desktop.notifications", "display-notifications")
 
-        spin = GSettingsSpinButton(_("Hover opacity"), "org.cinnamon.desktop.notifications", "fade-opacity", _("%"), 0, 100)
+        spin = g_settings_factory(SpinButton, _("Hover opacity"), "org.cinnamon.desktop.notifications", "fade-opacity", _("%"), 0, 100)
         settings.add_reveal_row(spin)
         spin.revealer.settings = Gio.Settings.new("org.cinnamon.desktop.notifications")
 
@@ -77,7 +77,7 @@ class Module:
 
         settings = page.add_section(_("Media keys OSD"))
 
-        combo = GSettingsComboBox(_("Media keys OSD size"), "org.cinnamon", "show-media-keys-osd", MEDIA_KEYS_OSD_SIZES)
+        combo = g_settings_factory(ComboBox, _("Media keys OSD size"), "org.cinnamon", "show-media-keys-osd", MEDIA_KEYS_OSD_SIZES)
         settings.add_row(combo)
 
     def send_test(self, widget):

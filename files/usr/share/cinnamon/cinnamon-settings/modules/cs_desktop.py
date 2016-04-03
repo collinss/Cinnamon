@@ -41,7 +41,7 @@ class Module:
                                   [DESKTOPS_ON_NON_PRIMARY,  _("Show desktop icons on non-primary monitor(s) only")],
                                   [DESKTOPS_ON_ALL,          _("Show desktop icons on all monitors")]]
 
-        widget = GSettingsComboBox("", DESKTOP_SCHEMA, LAYOUT_KEY, desktop_layout_options)
+        widget = g_settings_factory(ComboBox, "", DESKTOP_SCHEMA, LAYOUT_KEY, desktop_layout_options)
 
         widget.fill_row()
         widget.label.set_markup("<b>%s</b>" % _("Desktop layout"))
@@ -61,14 +61,14 @@ class Module:
         ]
 
         for key, label in options:
-            settings.add_row(GSettingsSwitch(label, DESKTOP_SCHEMA, key))
+            settings.add_row(g_settings_factory(Switch, label, DESKTOP_SCHEMA, key))
 
         settings = page.add_reveal_section(_("Options"),
                                            DESKTOP_SCHEMA,
                                            LAYOUT_KEY,
                                            [DESKTOPS_ON_PRIMARY, DESKTOPS_ON_NON_PRIMARY, DESKTOPS_ON_ALL])
 
-        switch = GSettingsSwitch(_("Allow icons from missing monitors to be displayed on the existing ones"),
+        switch = g_settings_factory(Switch, _("Allow icons from missing monitors to be displayed on the existing ones"),
                                  DESKTOP_SCHEMA,
                                  ORPHANS_KEY)
 

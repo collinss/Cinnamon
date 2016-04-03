@@ -90,23 +90,23 @@ class Module:
 
             settings = page.add_section(_("Enable Effects"))
 
-            widget = GSettingsSwitch(_("Window effects"), "org.cinnamon", "desktop-effects")
+            widget = g_settings_factory(Switch, _("Window effects"), "org.cinnamon", "desktop-effects")
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Effects on dialog boxes"), "org.cinnamon", "desktop-effects-on-dialogs")
+            widget = g_settings_factory(Switch, _("Effects on dialog boxes"), "org.cinnamon", "desktop-effects-on-dialogs")
             settings.add_reveal_row(widget, "org.cinnamon", "desktop-effects")
 
-            widget = GSettingsSwitch(_("Effects on Gtk menus"), "org.cinnamon", "desktop-effects-on-menus")
+            widget = g_settings_factory(Switch, _("Effects on Gtk menus"), "org.cinnamon", "desktop-effects-on-menus")
             settings.add_reveal_row(widget, "org.cinnamon", "desktop-effects")
 
-            self.chooser = GSettingsComboBox(_("Effects style"), "org.cinnamon", "desktop-effects-style", OPTIONS)
+            self.chooser = g_settings_factory(ComboBox, _("Effects style"), "org.cinnamon", "desktop-effects-style", OPTIONS)
             self.chooser.content_widget.connect("changed", self.on_value_changed)
             settings.add_reveal_row(self.chooser, "org.cinnamon", "desktop-effects")
 
-            widget = GSettingsSwitch(_("Fade effect on Cinnamon scrollboxes (like the Menu application list)"), "org.cinnamon", "enable-vfade")
+            widget = g_settings_factory(Switch, _("Fade effect on Cinnamon scrollboxes (like the Menu application list)"), "org.cinnamon", "enable-vfade")
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Session startup animation"), "org.cinnamon", "startup-animation")
+            widget = g_settings_factory(Switch, _("Session startup animation"), "org.cinnamon", "startup-animation")
             settings.add_row(widget)
 
             self.schema.connect("changed::desktop-effects", self.on_desktop_effects_enabled_changed)
@@ -190,7 +190,7 @@ class Module:
         self.size_group.add_widget(effect)
         tween = GSettingsTweenChooserButton(SCHEMA, KEY_TEMPLATE % (key, "transition"), DEP_PATH)
         self.size_group.add_widget(tween)
-        time = GSettingsSpinButton("", SCHEMA, KEY_TEMPLATE % (key, "time"), dep_key=DEP_PATH, mini=tmin, maxi=tmax, step=tstep, page=tdefault)
+        time = g_settings_factory(SpinButton, "", SCHEMA, KEY_TEMPLATE % (key, "time"), dep_key=DEP_PATH, mini=tmin, maxi=tmax, step=tstep, page=tdefault)
         time.set_border_width(0)
         time.set_margin_right(0)
         time.set_margin_left(0)

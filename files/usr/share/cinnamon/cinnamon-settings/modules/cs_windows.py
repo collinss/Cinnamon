@@ -38,21 +38,21 @@ class Module:
 
             size_group = Gtk.SizeGroup.new(Gtk.SizeGroupMode.HORIZONTAL)
 
-            widget = GSettingsComboBox(_("Action on title bar double-click"), "org.cinnamon.desktop.wm.preferences", "action-double-click-titlebar", action_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Action on title bar double-click"), "org.cinnamon.desktop.wm.preferences", "action-double-click-titlebar", action_options, size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsComboBox(_("Action on title bar middle-click"), "org.cinnamon.desktop.wm.preferences", "action-middle-click-titlebar", action_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Action on title bar middle-click"), "org.cinnamon.desktop.wm.preferences", "action-middle-click-titlebar", action_options, size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsComboBox(_("Action on title bar right-click"), "org.cinnamon.desktop.wm.preferences", "action-right-click-titlebar", action_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Action on title bar right-click"), "org.cinnamon.desktop.wm.preferences", "action-right-click-titlebar", action_options, size_group=size_group)
             settings.add_row(widget)
 
             scroll_options = [["none", _("Nothing")],["shade", _("Shade and unshade")],["opacity", _("Adjust opacity")]]
 
-            widget = GSettingsComboBox(_("Action on title bar with mouse scroll"), "org.cinnamon.desktop.wm.preferences", "action-scroll-titlebar", scroll_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Action on title bar with mouse scroll"), "org.cinnamon.desktop.wm.preferences", "action-scroll-titlebar", scroll_options, size_group=size_group)
             settings.add_row(widget)
 
-            spin = GSettingsSpinButton(_("Minimum opacity"), "org.cinnamon.desktop.wm.preferences", "min-window-opacity", _("%"))
+            spin = g_settings_factory(SpinButton, _("Minimum opacity"), "org.cinnamon.desktop.wm.preferences", "min-window-opacity", _("%"))
             settings.add_reveal_row(spin)
 
             spin.revealer.settings = Gio.Settings("org.cinnamon.desktop.wm.preferences")
@@ -66,19 +66,19 @@ class Module:
             settings = page.add_section(_("Window Focus"))
 
             focus_options = [["click", _("Click")], ["sloppy", _("Sloppy")], ["mouse", _("Mouse")]]
-            widget = GSettingsComboBox(_("Window focus mode"), "org.cinnamon.desktop.wm.preferences", "focus-mode", focus_options)
+            widget = g_settings_factory(ComboBox, _("Window focus mode"), "org.cinnamon.desktop.wm.preferences", "focus-mode", focus_options)
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Automatically raise focused windows"), "org.cinnamon.desktop.wm.preferences", "auto-raise")
+            widget = g_settings_factory(Switch, _("Automatically raise focused windows"), "org.cinnamon.desktop.wm.preferences", "auto-raise")
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Bring windows which require attention to the current workspace"), "org.cinnamon", "bring-windows-to-current-workspace")
+            widget = g_settings_factory(Switch, _("Bring windows which require attention to the current workspace"), "org.cinnamon", "bring-windows-to-current-workspace")
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Prevent focus stealing"), "org.cinnamon", "prevent-focus-stealing")
+            widget = g_settings_factory(Switch, _("Prevent focus stealing"), "org.cinnamon", "prevent-focus-stealing")
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Attach dialog windows to the parent window"), "org.cinnamon.muffin", "attach-modal-dialogs")
+            widget = g_settings_factory(Switch, _("Attach dialog windows to the parent window"), "org.cinnamon.muffin", "attach-modal-dialogs")
             settings.add_row(widget)
 
             settings = page.add_section(_("Moving and Resizing Windows"))
@@ -86,18 +86,18 @@ class Module:
             size_group = Gtk.SizeGroup.new(Gtk.SizeGroupMode.HORIZONTAL)
 
             placement_options = [["automatic", _("Automatic")], ["pointer", _("Cursor")], ["manual", _("Manual")], ["center", _("Center")]]
-            widget = GSettingsComboBox(_("Location of newly opened windows"), "org.cinnamon.muffin", "placement-mode", placement_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Location of newly opened windows"), "org.cinnamon.muffin", "placement-mode", placement_options, size_group=size_group)
             settings.add_row(widget)
 
             special_key_options = [["", _("Disabled")], ["<Alt>", "<Alt>"],["<Super>", "<Super>"],["<Control>", "<Control>"]]
-            widget = GSettingsComboBox(_("Special key to move and resize windows"), "org.cinnamon.desktop.wm.preferences", "mouse-button-modifier", special_key_options, size_group=size_group)
+            widget = g_settings_factory(ComboBox, _("Special key to move and resize windows"), "org.cinnamon.desktop.wm.preferences", "mouse-button-modifier", special_key_options, size_group=size_group)
             widget.set_tooltip_text(_("While the special key is pressed, windows can be dragged with the left mouse button and resized with the right mouse button."))
             settings.add_row(widget)
 
-            widget = GSettingsSpinButton(_("Window drag/resize threshold"), "org.cinnamon.muffin", "resize-threshold", _("Pixels"), 1, 100, size_group=size_group)
+            widget = g_settings_factory(SpinButton, _("Window drag/resize threshold"), "org.cinnamon.muffin", "resize-threshold", _("Pixels"), 1, 100, size_group=size_group)
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Edge resistance with other windows"), "org.cinnamon.muffin", "edge-resistance-window")
+            widget = g_settings_factory(Switch, _("Edge resistance with other windows"), "org.cinnamon.muffin", "edge-resistance-window")
             widget.set_tooltip_text(_("Make window borders stick when moved or resized near other windows."))
             settings.add_row(widget)
 
@@ -117,13 +117,13 @@ class Module:
                 ["coverflow", _("Coverflow (3D)")],
                 ["timeline", _("Timeline (3D)")]
             ]
-            widget = GSettingsComboBox(_("Alt-Tab switcher style"), "org.cinnamon", "alttab-switcher-style", alttab_styles)
+            widget = g_settings_factory(ComboBox, _("Alt-Tab switcher style"), "org.cinnamon", "alttab-switcher-style", alttab_styles)
             settings.add_row(widget)
 
-            widget = GSettingsSwitch(_("Display the alt-tab switcher on the primary monitor instead of the active one"), "org.cinnamon", "alttab-switcher-enforce-primary-monitor")
+            widget = g_settings_factory(Switch, _("Display the alt-tab switcher on the primary monitor instead of the active one"), "org.cinnamon", "alttab-switcher-enforce-primary-monitor")
             settings.add_row(widget)
 
-            widget = GSettingsSpinButton(_("Delay before displaying the alt-tab switcher"), "org.cinnamon", "alttab-switcher-delay", units=_("milliseconds"), mini=0, maxi=1000, step=50, page=150)
+            widget = g_settings_factory(SpinButton, _("Delay before displaying the alt-tab switcher"), "org.cinnamon", "alttab-switcher-delay", units=_("milliseconds"), mini=0, maxi=1000, step=50, page=150)
             settings.add_row(widget)
 
 class TitleBarButtonsOrderSelector(SettingsBox):
