@@ -12,6 +12,8 @@ import dbus
 
 settings_objects = {}
 
+CAN_BACKEND = ["Switch", "SpinButton", "Entry", "FontButton", "Range", "ComboBox", "ColorChooser", "SoundFileChooser"]
+
 # Monkey patch Gio.Settings object
 def __setitem__(self, key, value):
     # set_value() aborts the program on an unknown key
@@ -605,7 +607,7 @@ class SettingsBox(Gtk.Frame):
         list_box.set_selection_mode(Gtk.SelectionMode.NONE)
         row = Gtk.ListBoxRow()
         row.add(widget)
-        if isinstance(widget, GSettingsSwitch):
+        if isinstance(widget, Switch):
             list_box.connect("row-activated", widget.clicked)
         list_box.add(row)
         vbox.add(list_box)
@@ -621,7 +623,7 @@ class SettingsBox(Gtk.Frame):
         list_box.set_selection_mode(Gtk.SelectionMode.NONE)
         row = Gtk.ListBoxRow()
         row.add(widget)
-        if isinstance(widget, GSettingsSwitch):
+        if isinstance(widget, Switch):
             list_box.connect("row-activated", widget.clicked)
         list_box.add(row)
         vbox.add(list_box)
@@ -681,61 +683,28 @@ class IndentedHBox(Gtk.HBox):
     def add_expand(self, item):
         self.pack_start(item, True, True, 0)
 
-class GSettingsCheckButton(Gtk.CheckButton):
-    def __init__(self, label, schema, key, dep_key):
-        self.key = key
-        self.dep_key = dep_key
-        super(GSettingsCheckButton, self).__init__(label = label)
-        self.settings = Gio.Settings.new(schema)
-        self.set_active(self.settings.get_boolean(self.key))
-        self.settings.connect("changed::"+self.key, self.on_my_setting_changed)
-        self.connectorId = self.connect('toggled', self.on_my_value_changed)
-        self.dependency_invert = False
-        if self.dep_key is not None:
-            if self.dep_key[0] == '!':
-                self.dependency_invert = True
-                self.dep_key = self.dep_key[1:]
-            split = self.dep_key.split('/')
-            self.dep_settings = Gio.Settings.new(split[0])
-            self.dep_key = split[1]
-            self.dep_settings.connect("changed::"+self.dep_key, self.on_dependency_setting_changed)
-            self.on_dependency_setting_changed(self, None)
+class Switch(SettingsWidget):
+    bind_prop = "active"
+    bind_dir = Gio.SettingsBindFlags.DEFAULT
 
-    def on_my_setting_changed(self, settings, key):
-        self.disconnect(self.connectorId)                     #  panel-edit-mode can trigger changed:: twice in certain instances,
-        self.set_active(self.settings.get_boolean(self.key))  #  so disconnect temporarily when we are simply updating the widget state
-        self.connectorId = self.connect('toggled', self.on_my_value_changed)
-
-    def on_my_value_changed(self, widget):
-        self.settings.set_boolean(self.key, self.get_active())
-
-    def on_dependency_setting_changed(self, settings, dep_key):
-        if not self.dependency_invert:
-            self.set_sensitive(self.dep_settings.get_boolean(self.dep_key))
-        else:
-            self.set_sensitive(not self.dep_settings.get_boolean(self.dep_key))
-
-class GSettingsSwitch(SettingsWidget):
-    def __init__(self, label, schema=None, key=None, dep_key=None):
-        self.key = key
-        super(GSettingsSwitch, self).__init__(dep_key=dep_key)
+    def __init__(self, label, dep_key=None):
+        super(Switch, self).__init__(dep_key=dep_key)
 
         self.content_widget = Gtk.Switch()
         self.label = Gtk.Label(label)
         self.pack_start(self.label, False, False, 0)
         self.pack_end(self.content_widget, False, False, 0)
 
-        if schema:
-            self.settings = self.get_settings(schema)
-            self.settings.bind(key, self.content_widget, "active", Gio.SettingsBindFlags.DEFAULT)
-
-    def clicked(self, listbox, row, data=None):
+    def clicked(self, *args):
         self.content_widget.set_active(not self.content_widget.get_active())
 
-class GSettingsSpinButton(SettingsWidget):
-    def __init__(self, label, schema, key, units="", mini=None, maxi=None, step=1, page=None, dep_key=None, size_group=None):
-        super(GSettingsSpinButton, self).__init__(dep_key=dep_key)
-        self.key = key
+class SpinButton(SettingsWidget):
+    bind_prop = "value"
+    bind_dir = Gio.SettingsBindFlags.GET
+
+    def __init__(self, label, units="", mini=None, maxi=None, step=1, page=None, size_group=None, dep_key=None):
+        super(SpinButton, self).__init__(dep_key=dep_key)
+
         self.timer = None
 
         if units:
@@ -746,15 +715,13 @@ class GSettingsSpinButton(SettingsWidget):
         self.pack_start(self.label, False, False, 0)
         self.pack_end(self.content_widget, False, False, 0)
 
-        self.settings = self.get_settings(schema)
-
-        range = self.settings.get_range(self.key)
+        range = self.get_range()
         if mini == None or maxi == None:
-            mini = range[1][0]
-            maxi = range[1][1]
-        elif range[0] == "range":
-            mini = max(mini, range[1][0])
-            maxi = min(maxi, range[1][1])
+            mini = range[0]
+            maxi = range[1]
+        elif range is not None:
+            mini = max(mini, range[0])
+            maxi = min(maxi, range[1])
 
         if not page:
             page = step
@@ -767,7 +734,6 @@ class GSettingsSpinButton(SettingsWidget):
             digits = len(str(step).split('.')[1])
         self.content_widget.set_digits(digits)
 
-        self.settings.bind(key, self.content_widget.get_adjustment(), "value", Gio.SettingsBindFlags.GET)
         self.content_widget.connect("value-changed", self.apply_later)
 
         if size_group:
@@ -775,35 +741,36 @@ class GSettingsSpinButton(SettingsWidget):
 
     def apply_later(self, *args):
         def apply(self):
-            self.settings[self.key] = self.content_widget.get_value()
+            self.set_value(self.content_widget.get_value())
             self.timer = None
 
         if self.timer:
             GLib.source_remove(self.timer)
         self.timer = GLib.timeout_add(300, apply, self)
 
-class GSettingsEntry(SettingsWidget):
-    def __init__(self, label, schema, key, dep_key=None, size_group=None):
-        super(GSettingsEntry, self).__init__(dep_key=dep_key)
-        self.key = key
+class Entry(SettingsWidget):
+    bind_prop = "text"
+    bind_dir = Gio.SettingsBindFlags.DEFAULT
+
+    def __init__(self, label, size_group=None, dep_key=None):
+        super(Entry, self).__init__(dep_key=dep_key)
+
         self.label = Gtk.Label.new(label)
         self.content_widget = Gtk.Entry()
 
         self.pack_start(self.label, False, False, 0)
         self.pack_end(self.content_widget, False, False, 0)
-        self.settings = self.get_settings(schema)
-
-        self.settings.bind(key, self.content_widget, "text", Gio.SettingsBindFlags.DEFAULT)
 
         if size_group:
             self.add_to_size_group(size_group)
 
-class GSettingsFontButton(SettingsWidget):
-    def __init__(self, label, schema, key, dep_key=None, size_group=None):
-        super(GSettingsFontButton, self).__init__(dep_key=dep_key)
-        self.key = key
+class FontButton(SettingsWidget):
+    bind_prop = "font-name"
+    bind_dir = Gio.SettingsBindFlags.DEFAULT
 
-        self.settings = self.get_settings(schema)
+    def __init__(self, label, size_group=None, dep_key=None):
+        super(FontButton, self).__init__(dep_key=dep_key)
+
         self.label = Gtk.Label.new(label)
 
         self.content_widget = Gtk.FontButton()
@@ -812,22 +779,23 @@ class GSettingsFontButton(SettingsWidget):
             self.pack_start(self.label, False, False, 0)
         self.pack_end(self.content_widget, False, False, 0)
 
-        self.settings.bind(key, self.content_widget, "font-name", Gio.SettingsBindFlags.DEFAULT)
-
         if size_group:
             self.add_to_size_group(size_group)
 
-class GSettingsRange(SettingsWidget):
-    def __init__(self, label, schema, key, min_label, max_label, mini=None, maxi=None, step=None, invert=False, log=False, dep_key=None):
-        super(GSettingsRange, self).__init__(dep_key=dep_key)
+class Range(SettingsWidget):
+    bind_prop = "value"
+    bind_dir = Gio.SettingsBindFlags.GET | Gio.SettingsBindFlags.NO_SENSITIVITY
+
+    def __init__(self, label, min_label, max_label, mini=None, maxi=None, step=None, invert=False, log=False, dep_key=None):
+        super(Range, self).__init__(dep_key=dep_key)
+
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.set_spacing(0)
 
-        self.key = key
-        self.settings = self.get_settings(schema)
         self.log = log
         self.invert = invert
         self.timer = None
+        self.value = 0
 
         hbox = Gtk.Box()
 
@@ -843,17 +811,19 @@ class GSettingsRange(SettingsWidget):
         self.min_label.set_markup("<i><small>%s</small></i>" % min_label)
         self.max_label.set_markup("<i><small>%s</small></i>" % max_label)
 
-        range = self.settings.get_range(self.key)
+        range = self.get_range()
         if mini == None or maxi == None:
-            mini = range[1][0]
-            maxi = range[1][1]
-        elif range[0] == "range":
-            mini = max(mini, range[1][0])
-            maxi = min(maxi, range[1][1])
+            mini = range[0]
+            maxi = range[1]
+        elif range is not None:
+            mini = max(mini, range[0])
+            maxi = min(maxi, range[1])
 
         if log:
             mini = math.log(mini)
             maxi = math.log(maxi)
+            self.map_get = lambda x: math.log(x)
+            self.map_set = lambda x: math.exp(x)
 
         if step is None:
             self.step = (maxi - mini) * 0.02
@@ -863,10 +833,7 @@ class GSettingsRange(SettingsWidget):
         self.content_widget = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, mini, maxi, self.step)
         self.content_widget.set_inverted(invert)
         self.content_widget.set_draw_value(False)
-
-        val = self.settings.get_value(self.key)
-        if val.get_type_string() == "i":
-            self.content_widget.set_round_digits(0)
+        self.bind_object = self.content_widget.get_adjustment()
 
         if invert:
             self.step *= -1 # Gtk.Scale.new_with_range want a positive value, but our custom scroll handler wants a negative value
@@ -880,25 +847,14 @@ class GSettingsRange(SettingsWidget):
 
         self.content_widget.connect("scroll-event", self.on_scroll_event)
 
-        if log:
-            self.settings.bind_with_mapping(
-                    key,
-                    self.content_widget.get_adjustment(),
-                    "value",
-                    Gio.SettingsBindFlags.GET | Gio.SettingsBindFlags.NO_SENSITIVITY,
-                    lambda x: math.log(x),
-                    None)
-        else:
-            self.settings.bind(key, self.content_widget.get_adjustment(), "value", Gio.SettingsBindFlags.GET | Gio.SettingsBindFlags.NO_SENSITIVITY)
-
         self.content_widget.connect("value-changed", self.apply_later)
 
     def apply_later(self, *args):
         def apply(self):
             if self.log:
-                self.settings[self.key] = math.exp(self.content_widget.get_value())
+                self.set_value(math.exp(self.content_widget.get_value()))
             else:
-                self.settings[self.key] = self.content_widget.get_value()
+                self.set_value(self.content_widget.get_value())
             self.timer = None
 
         if self.timer:
@@ -919,12 +875,16 @@ class GSettingsRange(SettingsWidget):
         else:
             self.content_widget.add_mark(value, position, markup)
 
-class GSettingsComboBox(SettingsWidget):
-    def __init__(self, label, schema, key, options, valtype="string", dep_key=None, size_group=None):
-        super(GSettingsComboBox, self).__init__(dep_key=dep_key)
+    def set_rounding(self, digits):
+        if not self.log:
+            self.content_widget.set_round_digits(digits)
 
-        self.settings = self.get_settings(schema)
-        self.key = key
+class ComboBox(SettingsWidget):
+    bind_dir = None
+
+    def __init__(self, label, options, valtype="string", size_group=None, dep_key=None):
+        super(ComboBox, self).__init__(dep_key=dep_key)
+
         self.valtype = valtype
         self.option_map = {}
 
@@ -950,10 +910,7 @@ class GSettingsComboBox(SettingsWidget):
         self.pack_end(self.content_widget, False, False, 0)
         self.content_widget.show_all()
 
-        self.on_my_setting_changed()
-
         self.content_widget.connect('changed', self.on_my_value_changed)
-        self.settings.connect("changed::" + self.key, self.on_my_setting_changed)
 
         if size_group:
             self.add_to_size_group(size_group)
@@ -962,40 +919,37 @@ class GSettingsComboBox(SettingsWidget):
         tree_iter = widget.get_active_iter()
         if tree_iter != None:
             self.value = self.model[tree_iter][0]
-            self.settings[self.key] = self.value
+            self.set_value(self.value)
 
-    def on_my_setting_changed(self, *args):
-        self.value = self.settings[self.key]
+    def on_setting_changed(self, *args):
+        self.value = self.get_value()
         try:
             self.content_widget.set_active_iter(self.option_map[self.value])
         except:
             self.content_widget.set_active_iter(None)
 
+class ColorChooser(SettingsWidget):
+    bind_prop = "color"
+    bind_dir = Gio.SettingsBindFlags.DEFAULT
 
-class GSettingsColorChooser(SettingsWidget):
-    def __init__(self, label, schema, key, dep_key=None, size_group=None):
-        super(GSettingsColorChooser, self).__init__(dep_key=dep_key)
+    def __init__(self, label, size_group=None, dep_key=None):
+        super(ColorChooser, self).__init__(dep_key=dep_key)
 
         self.label = Gtk.Label(label)
         self.content_widget = Gtk.ColorButton()
         self.pack_start(self.label, False, False, 0)
         self.pack_end(self.content_widget, False, False, 0)
 
-        self.settings = self.get_settings(schema)
-        self.settings.bind_with_mapping(
-                key,
-                self.content_widget,
-                "color",
-                Gio.SettingsBindFlags.DEFAULT,
-                Gdk.color_parse,
-                Gdk.Color.to_string)
-
+        self.map_get = Gdk.color_parse
+        self.map_set = Gdk.Color.to_string
         if size_group:
             self.add_to_size_group(size_group)
 
-class GSettingsSoundFileChooser(SettingsWidget):
-    def __init__(self, label, schema, key, dep_key=None, size_group=None):
-        super(GSettingsSoundFileChooser, self).__init__(dep_key=dep_key)
+class SoundFileChooser(SettingsWidget):
+    bind_dir = None
+
+    def __init__(self, label, size_group=None, dep_key=None):
+        super(SoundFileChooser, self).__init__(dep_key=dep_key)
 
         self.label = Gtk.Label(label)
 
@@ -1004,15 +958,11 @@ class GSettingsSoundFileChooser(SettingsWidget):
         c = self.content_widget.get_style_context()
         c.add_class(Gtk.STYLE_CLASS_LINKED)
 
-        self.key = key
-        self.settings = self.get_settings(schema)
-
         self.pack_start(self.label, False, False, 0)
         self.pack_end(self.content_widget, False, False, 0)
 
         self.file_picker = Gtk.Button()
         self.file_picker.connect("clicked", self.on_picker_clicked)
-        self.update_button_label(self.settings.get_string(self.key))
 
         self.content_widget.add(self.file_picker)
 
@@ -1041,7 +991,7 @@ class GSettingsSoundFileChooser(SettingsWidget):
         self._proxy = Gio.DBusProxy.new_for_bus_finish(result)
 
     def on_play_clicked(self, widget):
-        self._proxy.PlaySoundFile("(us)", 0, self.settings.get_string(self.key))
+        self._proxy.PlaySoundFile("(us)", 0, self.get_value())
 
     def on_picker_clicked(self, widget):
         dialog = Gtk.FileChooserDialog(title=self.label.get_text(),
@@ -1049,15 +999,16 @@ class GSettingsSoundFileChooser(SettingsWidget):
                                        buttons=(_("_Cancel"), Gtk.ResponseType.CANCEL,
                                                 _("_Open"), Gtk.ResponseType.ACCEPT))
 
-        dialog.set_filename(self.settings.get_string(self.key))
+        dialog.set_filename(self.get_value())
 
         sound_filter = Gtk.FileFilter()
         sound_filter.add_mime_type("audio")
+        sound_filter.set_name(_("Sound files"))
         dialog.add_filter(sound_filter)
 
         if (dialog.run() == Gtk.ResponseType.ACCEPT):
             name = dialog.get_filename()
-            self.settings.set_string(self.key, name)
+            self.set_value(name)
             self.update_button_label(name)
 
         dialog.destroy()
@@ -1067,6 +1018,8 @@ class GSettingsSoundFileChooser(SettingsWidget):
 
         self.file_picker.set_label(f.get_basename())
 
+    def on_setting_changed(self, *args):
+        self.update_button_label(self.get_value())
 
 class DependencyCheckInstallButton(Gtk.Box):
     def __init__(self, checking_text, install_button_text, packages, final_widget=None, satisfied_cb=None):
@@ -1169,4 +1122,80 @@ class GSettingsDependencySwitch(SettingsWidget):
         if schema:
             self.settings = self.get_settings(schema)
             self.settings.bind(key, self.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+# This class is not meant to be used directly - it is only a backend for the
+# settings widgets to enable them to bind attributes to gsettings keys. To use
+# the gesttings backend, simply add the "GSettings" prefix to the beginning
+# of the widget class name. The arguments of the backended class will be
+# (label, schema, key, any additional widget-specific args and keyword args).
+# (Note: this only works for classes that are gsettings compatible.)
+#
+# If you wish to make a new widget available to be backended, place it in the
+# CAN_BACKEND list. In addition, you will need to add the following attributes
+# to the widget class:
+#
+# bind_dir - (Gio.SettingsBindFlags) flags to define the binding direction or
+#            None if you don't want the setting bound (for example if the
+#            setting effects multiple attributes)
+# bind_prop - (string) the attribute in the widget that will be bound to the
+#             setting. This property may be omitted if bind_dir is None
+# bind_object - (optional) the object to which to bind to (only needed if the
+#               attribute to be bound is not a property of self.content_widget)
+# map_get, map_set - (function, optional) a function to map between setting and
+#                    bound attribute. May also be passed as a keyword arg during
+#                    instantiation. These will be ignored if bind_dir=None
+# set_rounding - (function, optional) To be used to set the digits to round to
+#                if the setting is an integer
+class CSGSettingsBackend(object):
+    def bind_settings(self):
+        if hasattr(self, "set_rounding"):
+            vtype = self.settings.get_value(self.key).get_type_string()
+            if vtype in ["i", "u"]:
+                self.set_rounding(0)
+        if hasattr(self, "bind_object"):
+            bind_object = self.bind_object
+        else:
+            bind_object = self.content_widget
+        if hasattr(self, "map_get") or hasattr(self, "map_set"):
+            self.settings.bind_with_mapping(self.key, bind_object, self.bind_prop, self.bind_dir, self.map_get, self.map_set)
+        elif self.bind_dir != None:
+            self.settings.bind(self.key, bind_object, self.bind_prop, self.bind_dir)
+        else:
+            self.settings.connect("changed::"+self.key, self.on_setting_changed)
+            self.on_setting_changed()
+
+    def set_value(self, value):
+        self.settings[self.key] = value
+
+    def get_value(self):
+        return self.settings[self.key]
+
+    def get_range(self):
+        range = self.settings.get_range(self.key)
+        if range[0] == "range":
+            return [range[1][0], range[1][1]]
+        else:
+            return None
+
+def g_settings_factory(subclass):
+    class NewClass(globals()[subclass], CSGSettingsBackend):
+        def __init__(self, label, schema, key, *args, **kwargs):
+            self.key = key
+            if schema not in settings_objects.keys():
+                settings_objects[schema] = Gio.Settings.new(schema)
+            self.settings = settings_objects[schema]
+
+            if kwargs.has_key("map_get"):
+                self.map_get = kwargs["map_get"]
+                del kwargs["map_get"]
+            if kwargs.has_key("map_set"):
+                self.map_set = kwargs["map_set"]
+                del kwargs["map_set"]
+
+            super(NewClass, self).__init__(label, *args, **kwargs)
+            self.bind_settings()
+    return NewClass
+
+for widget in CAN_BACKEND:
+    globals()["GSettings"+widget] = g_settings_factory(widget)
 

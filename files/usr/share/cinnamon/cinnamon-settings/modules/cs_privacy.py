@@ -31,7 +31,7 @@ class Module:
 
             settings = page.add_reveal_section(_("Recent files"), PRIVACY_SCHEMA, GTK_RECENT_ENABLE_KEY)
 
-            self.indefinite_switch = GSettingsSwitch(_("Never forget old files"))
+            self.indefinite_switch = Switch(_("Never forget old files"))
             self.indefinite_switch.content_widget.connect("notify::active", self.on_indefinite_toggled)
             settings.add_row(self.indefinite_switch)
 
