@@ -69,11 +69,8 @@ class Module:
         spin.revealer.settings.connect("changed::display-notifications", on_settings_changed)
         on_settings_changed()
 
-        widget = SettingsWidget()
-        button = Gtk.Button(label = _("Display a test notification"))
-        button.connect("clicked", self.send_test)
-        widget.pack_start(button, True, True, 0)
-        settings.add_row(widget)
+        button = Button(_("Display a test notification"), self.send_test)
+        settings.add_row(button)
 
         settings = page.add_section(_("Media keys OSD"))
 
