@@ -2,7 +2,7 @@
 import sys
 import dbus
 from gi.repository import GLib, Gtk, Gdk
-from SettingsWidgets import *
+from GSettingsWidgets import *
 
 class Monitor:
     def __init__(self):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from SettingsWidgets import *
+from GSettingsWidgets import *
 from gi.repository import Gtk, Gdk, GLib, Pango
 import os, json, subprocess, re
 from xml.etree import ElementTree

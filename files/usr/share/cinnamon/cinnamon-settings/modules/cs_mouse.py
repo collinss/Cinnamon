@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 from gi.repository import Gtk, Gdk, GLib
-from SettingsWidgets import *
+from GSettingsWidgets import *
 
 class Module:
     comment = _("Control mouse and touchpad settings")

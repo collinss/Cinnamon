@@ -2,7 +2,7 @@
 
 from ExtensionCore import ExtensionSidePage
 from gi.repository import Gtk
-from SettingsWidgets import *
+from GSettingsWidgets import *
 
 class Module:
     comment = _("Manage your Cinnamon desklets")

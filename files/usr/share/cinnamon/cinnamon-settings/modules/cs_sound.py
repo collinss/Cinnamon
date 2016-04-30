@@ -3,7 +3,7 @@
 import gi
 gi.require_version('Cvc', '1.0')
 from gi.repository import GLib, Gtk, Gdk, Cvc, GdkPixbuf, Gio
-from SettingsWidgets import *
+from GSettingsWidgets import *
 import dbus
 
 CINNAMON_SOUNDS = "org.cinnamon.sounds"

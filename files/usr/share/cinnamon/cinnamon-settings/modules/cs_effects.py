@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from SettingsWidgets import *
+from GSettingsWidgets import *
 from EffectsWidgets import TweenChooserButton, EffectChooserButton
 # import tweenEquations
 

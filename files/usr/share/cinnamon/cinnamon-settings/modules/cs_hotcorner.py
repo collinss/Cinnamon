@@ -2,7 +2,7 @@
 import cairo
 import math
 
-from SettingsWidgets import *
+from GSettingsWidgets import *
 from gi.repository import Gio
 
 _270_DEG = 270.0 * (math.pi/180.0)

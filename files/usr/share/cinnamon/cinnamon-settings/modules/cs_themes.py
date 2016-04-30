@@ -2,7 +2,7 @@
 
 from ExtensionCore import ExtensionSidePage
 from gi.repository.Gtk import SizeGroup, SizeGroupMode
-from SettingsWidgets import *
+from GSettingsWidgets import *
 
 import glob
 

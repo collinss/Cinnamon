@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from SettingsWidgets import *
+from GSettingsWidgets import *
 
 PRIVACY_SCHEMA = "org.cinnamon.desktop.privacy"
 GTK_RECENT_ENABLE_KEY = "remember-recent-files"

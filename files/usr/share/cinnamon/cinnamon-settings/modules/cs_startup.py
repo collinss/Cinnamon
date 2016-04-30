@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from SettingsWidgets import *
+from GSettingsWidgets import *
 from gi.repository import Gio, Gtk, GObject, Gdk, GdkPixbuf, GLib, Pango
 import os
 import glob
