@@ -106,7 +106,22 @@ StScrollBar StButton#vhandle:hover {
 /* ===================================================================
  * PopupMenu (popupMenu.js) 
  * ===================================================================*/
+ /* .popup-menu-boxpointer and .popup-menu are kept for compatibility
+    with cinnamon version under 3.2. Use .menu in version 3.2 and above */
+.popup-menu-boxpointer {
+    -arrow-border-radius: 8px;
+    -arrow-background-color: rgba(80,80,80,0.9);
+    -arrow-border-width: 2px;
+    -arrow-border-color: #a5a5a5;
+    -arrow-base: 24px;
+    -arrow-rise: 11px;
+}
 .popup-menu {
+    color: #ffffff;
+    font-size: 9.5pt;
+    min-width: 100px;
+}
+.menu {
     border-radius: 8px;
     background-color: rgba(80,80,80,0.9);
     border-width: 2px;

@@ -2046,7 +2046,7 @@ PopupMenu.prototype = {
         this.animating = false;
         this._slidePosition = -1;
 
-        this.actor = new St.Bin({ style_class: 'popup-menu'});
+        this.actor = new St.Bin({ style_class: 'menu' });
         this.actor._delegate = this;
         this.actor.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
 
@@ -2373,12 +2373,12 @@ PopupMenu.prototype = {
                 if (this._orientation == St.Side.BOTTOM) {
                     this.sideFlipped = true;
                     yPos = sourceBox.y1 - natHeight;
-                    this.actor.set_style_class_name('popup-menu bottom');
+                    this.actor.set_style_class_name('menu bottom');
                 }
                 else {
                     this.sideFlipped = false;
                     yPos = sourceBox.y2;
-                    this.actor.set_style_class_name('popup-menu top');
+                    this.actor.set_style_class_name('menu top');
                 }
                 break;
             case St.Side.LEFT:
@@ -2395,12 +2395,12 @@ PopupMenu.prototype = {
                 if (this._orientation == St.Side.RIGHT || x2 - sourceBox.x2 < natWidth) {
                     this.sideFlipped = true;
                     xPos = sourceBox.x1 - natWidth;
-                    this.actor.set_style_class_name('popup-menu right');
+                    this.actor.set_style_class_name('menu right');
                 }
                 else {
                     this.sideFlipped = false;
                     xPos = sourceBox.x2;
-                    this.actor.set_style_class_name('popup-menu left');
+                    this.actor.set_style_class_name('menu left');
                 }
                 break;
         }
