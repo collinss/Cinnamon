@@ -67,10 +67,12 @@ class ManageAppletsPage(ManageSpicesPage):
         self.panel_select_buttons.get_style_context().add_class("linked")
         # self.previous_button = Gtk.Button.new_from_icon_name('go-previous-symbolic', Gtk.IconSize.BUTTON)
         self.previous_button = Gtk.Button(label=_("Previous Panel"))
+        self.previous_button.set_no_show_all(False)
         self.previous_button.connect("clicked", self.previous_panel)
         self.panel_select_buttons.add(self.previous_button)
         # self.next_button = Gtk.Button.new_from_icon_name('go-next-symbolic', Gtk.IconSize.BUTTON)
         self.next_button = Gtk.Button(label=_("Next Panel"))
+        self.next_button.set_no_show_all(False)
         self.next_button.connect("clicked", self.next_panel)
         self.panel_select_buttons.add(self.next_button)
         size_group = Gtk.SizeGroup.new(Gtk.SizeGroupMode.HORIZONTAL)
@@ -82,6 +84,8 @@ class ManageAppletsPage(ManageSpicesPage):
         self.connect("map", self.restore_highlight)
         self.connect("unmap", self.remove_highlight)
         self.connect("destroy", self.remove_highlight)
+        self.settings.connect('changed:: panels-enabled', self.panels_changed)
+        self.panels_changed()
 
         self.top_box.pack_start(self.panel_select_buttons, False, False, 0)
 
@@ -116,6 +120,14 @@ class ManageAppletsPage(ManageSpicesPage):
             self.panel_id = int(panels[0].split(":")[0])
 
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, True)
+
+    def panels_changed(self, *args):
+        if len(self.settings.get_strv('panels-enabled')) > 1:
+            self.previous_button.show()
+            self.next_button.show()
+        else:
+            self.previous_button.hide()
+            self.next_button.hide()
 
     def remove_highlight(self, *args):
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, False)
