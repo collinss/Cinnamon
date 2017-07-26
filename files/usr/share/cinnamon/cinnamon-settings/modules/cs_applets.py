@@ -4,7 +4,7 @@ import sys
 from ExtensionCore import ManageSpicesPage, DownloadSpicesPage
 from SettingsWidgets import SidePage, SettingsStack
 from Spices import Spice_Harvester
-from gi.repository import GLib, Gtk
+from gi.repository import GLib, Gtk, Gdk
 
 class Module:
     name = "applets"
@@ -58,6 +58,9 @@ class ManageAppletsPage(ManageSpicesPage):
     def __init__(self, parent, spices, window):
         super(ManageAppletsPage, self).__init__(parent, self.collection_type, spices, window)
 
+        self.panels = []
+        self.current_panel_index = 0
+
         if len(sys.argv) > 2 and sys.argv[1] == "applets" and sys.argv[2][0:5] == "panel":
             self.panel_id = int(sys.argv[2][5:])
         else:
@@ -92,37 +95,38 @@ class ManageAppletsPage(ManageSpicesPage):
     def previous_panel(self, *args):
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, False)
 
-        panels = self.settings.get_strv("panels-enabled")
-        for i in range(len(panels)):
-            if int(panels[i].split(":")[0]) == self.panel_id:
-                index = i
-                break
-
-        if index - 1 >= 0:
-            self.panel_id = int(panels[index - 1].split(":")[0])
+        if self.current_panel_index - 1 >= 0:
+            self.current_panel_index -= 1
         else:
-            self.panel_id = int(panels[len(panels) - 1].split(":")[0])
+            self.current_panel_index = len(self.panels) - 1
+        self.panel_id = int(self.panels[self.current_panel_index].split(":")[0])
 
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, True)
 
     def next_panel(self, widget):
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, False)
 
-        panels = self.settings.get_strv("panels-enabled")
-        for i in range(len(panels)):
-            if int(panels[i].split(":")[0]) == self.panel_id:
-                index = i
-                break
-
-        if index + 1 < len(panels):
-            self.panel_id = int(panels[index + 1].split(":")[0])
+        if self.current_panel_index + 1 < len(self.panels):
+            self.current_panel_index += 1
         else:
-            self.panel_id = int(panels[0].split(":")[0])
+            self.current_panel_index = 0
+        self.panel_id = int(self.panels[self.current_panel_index].split(":")[0])
 
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, True)
 
     def panels_changed(self, *args):
-        if len(self.settings.get_strv('panels-enabled')) > 1:
+        self.panels = []
+        n_mons = Gdk.Screen.get_default().get_n_monitors()
+
+        # we only want to select panels that are on a connected screen
+        for panel in self.settings.get_strv('panels-enabled'):
+            panel_id, monitor, pos = panel.split(":")
+            if int(monitor) < n_mons:
+                if panel_id == self.panel_id:
+                    self.current_panel_index = len(self.panels)
+                self.panels.append(panel)
+
+        if len(self.panels) > 1:
             self.previous_button.show()
             self.next_button.show()
         else:
