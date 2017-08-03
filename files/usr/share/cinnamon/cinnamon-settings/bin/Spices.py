@@ -447,7 +447,7 @@ class Spice_Harvester(GObject.Object):
                 self.updates_available.append(uuid)
 
     """ downloads an updated version of the index and assets"""
-    def refresh_cache(self, load_assets=True):
+    def refresh_cache(self):
         self.old_cache = self.index_cache
 
         job = {'func': self._download_cache}
