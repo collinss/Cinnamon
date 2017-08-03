@@ -606,7 +606,7 @@ class DownloadSpicesRow(Gtk.ListBoxRow):
 
         self.status_ids = {}
 
-        installed = self.spices.get_is_installed(uuid)
+        self.installed = self.spices.get_is_installed(uuid)
 
         widget = SettingsWidget()
         widget.set_spacing(15)
@@ -650,7 +650,7 @@ class DownloadSpicesRow(Gtk.ListBoxRow):
         widget.pack_start(self.button_box, False, False, 0)
         size_groups[2].add_widget(self.button_box)
 
-        if not installed:
+        if not self.installed:
             download_button = Gtk.Button.new_from_icon_name('go-down-symbolic', 2)
             self.button_box.pack_start(download_button, False, False, 0)
             download_button.connect('clicked', self.download)
@@ -661,7 +661,7 @@ class DownloadSpicesRow(Gtk.ListBoxRow):
             download_button.connect('clicked', self.download)
             download_button.set_tooltip_text(_("Update"))
 
-        if installed:
+        if self.installed:
             self.add_status('installed', 'object-select-symbolic', _("Installed"))
 
         self.show_all()
@@ -721,6 +721,7 @@ class DownloadSpicesPage(SettingsPage):
         sort_types.append(['name', _("Name")])
         sort_types.append(['score', _("Popularity")])
         sort_types.append(['date', _("Date")])
+        sort_types.append(['installed', _("Installed")])
         self.sort_combo.set_active(1) #Rating
         self.sort_combo.connect('changed', self.sort_changed)
         self.top_box.pack_start(self.sort_combo, False, False, 4)
@@ -854,12 +855,23 @@ class DownloadSpicesPage(SettingsPage):
         def sort_date(row1, row2):
             return row2.timestamp - row1.timestamp
 
-        if self.sort_combo.get_active_id() == 'name':
+        def sort_installed(row1, row2):
+            if row1.installed == row2.installed:
+                return 0
+            elif row1.installed:
+                return -1
+            else:
+                return 1
+
+        sort_type = self.sort_combo.get_active_id()
+        if sort_type == 'name':
             self.list_box.set_sort_func(sort_name)
-        elif self.sort_combo.get_active_id() == 'score':
+        elif sort_type == 'score':
             self.list_box.set_sort_func(sort_score)
-        else:
+        elif sort_type == 'date':
             self.list_box.set_sort_func(sort_date)
+        else:
+            self.list_box.set_sort_func(sort_installed)
 
     def on_row_selected(self, list_box, row):
         if row is None:
