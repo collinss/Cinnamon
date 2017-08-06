@@ -147,8 +147,6 @@ class ManageSpicesRow(Gtk.ListBoxRow):
 
         try:
             self.max_instances = int(self.metadata["max-instances"])
-            if self.uuid == 'computer@brownsr':
-                print "hello"
             if self.max_instances < -1:
                 self.max_instances = 1
         except (KeyError, ValueError):
@@ -330,7 +328,7 @@ class ManageSpicesRow(Gtk.ListBoxRow):
 
     def on_scan_complete(self, is_dangerous):
         if is_dangerous:
-            self.add_status('dangerous', 'dialog-warning-symbolic', _("This %s contains function calls that could potentially cause Cinnamon to crash or freeze. If you are experiencing crashes of freezing, please try removing this %s.") % (self.extension_type, self.extension_type))
+            self.add_status('dangerous', 'dialog-warning-symbolic', _("This %s contains function calls that could potentially cause Cinnamon to crash or freeze. If you are experiencing crashes or freezing, please try removing this %s.") % (self.extension_type, self.extension_type))
 
 
 class ManageSpicesPage(SettingsPage):
@@ -346,8 +344,6 @@ class ManageSpicesPage(SettingsPage):
         self.has_filter = False
         self.window = window
         self.extension_rows = []
-
-        self.settings = Gio.Settings.new("org.cinnamon")
 
         self.top_box = Gtk.Box()
         self.pack_start(self.top_box, False, False, 10)
@@ -464,14 +460,12 @@ class ManageSpicesPage(SettingsPage):
         pb_container.pack_start(self.progress_bar, True, True, 0)
         self.pack_end(pb_container, False, False, 0)
 
-        self.enabled_extensions = self.settings.get_strv("enabled-%ss" % (self.collection_type))
-        self.settings.connect("changed::enabled-%ss" % self.collection_type, self.enabled_changed)
         self.load_extensions()
 
         self.connect('map', self.grab_search_box)
 
         self.spices.connect("installed-changed", self.load_extensions)
-        self.spices.connect("running-changed", self.update_running_state)
+        self.spices.connect("status-changed", self.update_status)
 
     def on_entry_refilter(self, widget, data=None):
         if self.search_entry.get_text() == "":
@@ -486,10 +480,8 @@ class ManageSpicesPage(SettingsPage):
             self.has_filter = True
 
     def enabled_changed(self, *args):
-        self.enabled_extensions = self.settings.get_strv("enabled-%ss" % (self.collection_type))
-
         for row in self.extension_rows:
-            row.set_enabled(self.spices.get_is_enabled(row.uuid))
+            row.set_enabled(self.spices.get_enabled(row.uuid))
 
         self.update_button_states()
 
@@ -500,15 +492,9 @@ class ManageSpicesPage(SettingsPage):
             self.remove_button.set_sensitive(False)
             self.uninstall_button.set_sensitive(False)
         else:
-            self.instance_button.set_sensitive(True)
-            if row.enabled:
-                self.remove_button.set_sensitive(True)
-            else:
-                self.remove_button.set_sensitive(False)
-            if row.writable:
-                self.uninstall_button.set_sensitive(True)
-            else:
-                self.uninstall_button.set_sensitive(False)
+            self.instance_button.set_sensitive(row.enabled == 0 or row.max_instances != 1)
+            self.remove_button.set_sensitive(row.enabled)
+            self.uninstall_button.set_sensitive(row.writable)
 
     def add_instance(self, *args):
         extension_row = self.list_box.get_selected_row()
@@ -516,39 +502,33 @@ class ManageSpicesPage(SettingsPage):
 
     def enable_extension(self, uuid, name, version_check = True):
         if not version_check:
-            if not show_prompt(_("Extension %s is not compatible with current version of cinnamon. Using it may break your system. Load anyway?") % uuid):
+            if not show_prompt(_("Extension %s is not compatible with current version of cinnamon. Using it may break your system. Load anyway?") % uuid, self.window):
                 return
             else:
                 uuid = "!" + uuid
 
         self.enable(uuid)
 
+    def enable(self, uuid):
+        self.spices.enable_extension(uuid)
+
     def remove_all_instances(self, *args):
         extension_row = self.list_box.get_selected_row()
-        self.disable_extension(extension_row.uuid, extension_row.name, extension_row.enabled)
 
-    def disable_extension(self, uuid, name, checked=0):
-        if (checked > 1):
-            msg = _("There are multiple instances, do you want to remove all of them?\n\n")
-            msg += self.RemoveString
-
-            if not show_prompt(msg):
+        if (extension_row.enabled > 1):
+            msg = _("There are %d instances enabled, are you sure you want to remove all of them?\n\n%s" % (extension_row.enabled, self.RemoveString))
+            if not show_prompt(msg, self.window):
                 return
 
-        newExtensions = []
-        for enabled_extension in self.enabled_extensions:
-            if uuid not in enabled_extension:
-                newExtensions.append(enabled_extension)
-        self.enabled_extensions = newExtensions
-        self.settings.set_strv(("enabled-%ss") % (self.collection_type), self.enabled_extensions)
+        self.spices.disable_extension(extension_row.uuid)
 
     def uninstall_extension(self, *args):
         extension_row = self.list_box.get_selected_row()
         if not show_prompt(_("Are you sure you want to completely remove %s?") % (extension_row.uuid), self.window):
             return
-        self.disable_extension(extension_row.uuid, extension_row.name, 0)
+        self.spices.disable_extension(extension_row.uuid)
 
-        self.spices.uninstall(extension_row.uuid, extension_row.name)
+        self.spices.uninstall(extension_row.uuid)
 
     def on_uninstall_finished(self, uuid):
         self.load_extensions()
@@ -560,7 +540,7 @@ class ManageSpicesPage(SettingsPage):
             msg = _("This will restore the default set of enabled desklets. Are you sure you want to do this?")
         elif self.collection_type == "extension":
             msg = _("This will disable all active extensions. Are you sure you want to do this?")
-        if show_prompt(msg):
+        if show_prompt(msg, self.window):
             if self.collection_type != "extension":
                 os.system(('gsettings reset org.cinnamon next-%s-id') % (self.collection_type))
             os.system(('gsettings reset org.cinnamon enabled-%ss') % (self.collection_type))
@@ -577,16 +557,22 @@ class ManageSpicesPage(SettingsPage):
                 extension_row = ManageSpicesRow(self.collection_type, metadata, size_group)
                 self.list_box.add(extension_row)
                 self.extension_rows.append(extension_row)
-                extension_row.set_enabled(self.spices.get_is_enabled(uuid))
+                extension_row.set_enabled(self.spices.get_enabled(uuid))
             except Exception, msg:
                 print "Failed to load extension %s: %s" % (uuid, msg)
 
         self.list_box.show_all()
 
-    def update_running_state(self, *args):
+    def update_status(self, *args):
         for row in self.extension_rows:
-            if self.spices.get_is_enabled(row.uuid) and not self.spices.is_running(row.uuid):
-                row.add_status('error', 'dialog-error-symbolic', _("Something went wrong while loading the %s %s. Please make sure you are using the latest version, and then report the issue to the developer.") % (self.collection_type, self.uuid))
+            enabled = self.spices.get_enabled(row.uuid)
+            row.set_enabled(enabled)
+            if enabled and not self.spices.get_is_running(row.uuid):
+                row.add_status('error', 'dialog-error-symbolic', _("Something went wrong while loading the %s %s. Please make sure you are using the latest version, and then report the issue to the developer.") % (self.collection_type, row.uuid))
+            else:
+                row.remove_status('error')
+
+        self.update_button_states()
 
     def grab_search_box(self, *args):
         self.search_entry.grab_focus()
@@ -702,8 +688,6 @@ class DownloadSpicesPage(SettingsPage):
         self.extension_rows = []
         self._signals = []
 
-        self.settings = Gio.Settings.new("org.cinnamon")
-
         self.top_box = Gtk.Box()
         self.pack_start(self.top_box, False, False, 10)
 
@@ -798,6 +782,12 @@ class DownloadSpicesPage(SettingsPage):
         box.add(self.more_info_button)
         self.more_info_button.set_sensitive(False)
 
+        self.uninstall_button = Gtk.Button(label=_("Uninstall"))
+        self.uninstall_button.connect("clicked", self.uninstall)
+        button_group.add_widget(self.uninstall_button)
+        box.add(self.uninstall_button)
+        self.uninstall_button.set_sensitive(False)
+
         self.update_all_button = Gtk.Button(label=_("Update all"))
         self.update_all_button.connect("clicked", self.update_all)
         button_group.add_widget(self.update_all_button)
@@ -876,12 +866,22 @@ class DownloadSpicesPage(SettingsPage):
     def on_row_selected(self, list_box, row):
         if row is None:
             self.more_info_button.set_sensitive(False)
+            self.uninstall_button.set_sensitive(False)
         else:
             self.more_info_button.set_sensitive(True)
+            self.uninstall_button.set_sensitive(row.installed)
+
+    def uninstall(self, *args):
+        extension_row = self.list_box.get_selected_row()
+        if not show_prompt(_("Are you sure you want to completely remove %s?") % (extension_row.uuid), self.window):
+            return
+
+        self.disable_extension(extension_row.uuid, extension_row.name, 0)
+        self.spices.uninstall(extension_row.uuid)
 
     def refresh(self, *args):
         self.refresh_button.set_sensitive(False)
-        self.spices.refresh_cache(True)
+        self.spices.refresh_cache()
 
     def build_list(self, *args):
         spices_data = self.spices.get_cache()

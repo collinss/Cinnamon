@@ -64,7 +64,7 @@ class ManageAppletsPage(ManageSpicesPage):
         if len(sys.argv) > 2 and sys.argv[1] == "applets" and sys.argv[2][0:5] == "panel":
             self.panel_id = int(sys.argv[2][5:])
         else:
-            self.panel_id = int(self.settings.get_strv("panels-enabled")[0].split(":")[0])
+            self.panel_id = int(self.spices.settings.get_strv("panels-enabled")[0].split(":")[0])
 
         self.panel_select_buttons = Gtk.Box()
         self.panel_select_buttons.get_style_context().add_class("linked")
@@ -87,7 +87,7 @@ class ManageAppletsPage(ManageSpicesPage):
         self.connect("map", self.restore_highlight)
         self.connect("unmap", self.remove_highlight)
         self.connect("destroy", self.remove_highlight)
-        self.settings.connect('changed:: panels-enabled', self.panels_changed)
+        self.spices.settings.connect('changed:: panels-enabled', self.panels_changed)
         self.panels_changed()
 
         self.top_box.pack_start(self.panel_select_buttons, False, False, 0)
@@ -119,7 +119,7 @@ class ManageAppletsPage(ManageSpicesPage):
         n_mons = Gdk.Screen.get_default().get_n_monitors()
 
         # we only want to select panels that are on a connected screen
-        for panel in self.settings.get_strv('panels-enabled'):
+        for panel in self.spices.settings.get_strv('panels-enabled'):
             panel_id, monitor, pos = panel.split(":")
             if int(monitor) < n_mons:
                 if panel_id == self.panel_id:
@@ -140,23 +140,4 @@ class ManageAppletsPage(ManageSpicesPage):
         self.spices.send_proxy_signal('highlightPanel', '(ib)', self.panel_id, True)
 
     def enable(self, uuid):
-        applet_id = self.settings.get_int("next-applet-id");
-        self.settings.set_int("next-applet-id", (applet_id+1));
-
-        # we want to position the applet on right side of the left section
-        new_list = []
-        position = 0
-        for applet_string in self.enabled_extensions:
-            info = applet_string.split(':')
-            # we need to shift any applets in the same section
-            if info[0] == 'panel%d' % self.panel_id and info[1] == 'right':
-                info[2] = str(int(info[2]) + 1)
-                applet_string = ':'.join(info)
-            new_list.append(applet_string)
-
-        info_string = 'panel%d:right:0:%s:%d' % (self.panel_id, uuid, applet_id)
-        new_list.append(info_string)
-        self.enabled_extensions = new_list
-
-        self.settings.set_strv(("enabled-%ss") % (self.collection_type), self.enabled_extensions)
-
+        self.spices.enable_extension(uuid, panel=self.panel_id)

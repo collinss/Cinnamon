@@ -64,7 +64,7 @@ class Module:
             settings.add_row(widget)
 
             page = DownloadSpicesPage(self, 'theme', self.spices, self.window)
-            self.sidePage.stack.add_titled(page, 'download', _("Download"))
+            self.sidePage.stack.add_titled(page, 'download', _("Add/Remove"))
 
             page = SettingsPage()
             self.sidePage.stack.add_titled(page, "options", _("Settings"))

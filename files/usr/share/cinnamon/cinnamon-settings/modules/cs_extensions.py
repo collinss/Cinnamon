@@ -57,8 +57,3 @@ class ManageExtensionsPage(ManageSpicesPage):
 
     def __init__(self, parent, spices, window):
         super(ManageExtensionsPage, self).__init__(parent, self.collection_type, spices, window)
-
-    def enable(self, uuid):
-        self.enabled_extensions.append(uuid)
-
-        self.settings.set_strv('enabled-extensions', self.enabled_extensions)

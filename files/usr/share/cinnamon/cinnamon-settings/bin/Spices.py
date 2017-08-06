@@ -1,7 +1,7 @@
 try:
     from SettingsWidgets import rec_mkdir
     import gettext
-    from gi.repository import Gio, Gtk, GObject, GdkPixbuf, GLib
+    from gi.repository import Gio, Gtk, GObject, Gdk, GdkPixbuf, GLib
     import tempfile
     import os
     import sys
@@ -111,7 +111,7 @@ class ThreadedTaskManager(GObject.GObject):
 class Spice_Harvester(GObject.Object):
     __gsignals__ = {
         'installed-changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
-        'running-changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'status-changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
         'cache-loaded': (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
@@ -120,7 +120,7 @@ class Spice_Harvester(GObject.Object):
         self.collection_type = collection_type
         self.window = window
 
-        self.themes = collection_type == "theme"
+        self.themes = collection_type == 'theme'
         self.index_cache = {}
         self.meta_map = {}
         self.download_manager = ThreadedTaskManager(10)
@@ -139,12 +139,17 @@ class Spice_Harvester(GObject.Object):
         self.download_total_files = 0
         self.download_current_file = 0
 
-        self.cache_folder = "%s/.cinnamon/spices.cache/%s/" % (home, self.collection_type)
+        self.cache_folder = '%s/.cinnamon/spices.cache/%s/' % (home, self.collection_type)
         if not os.path.exists(self.cache_folder):
             rec_mkdir(self.cache_folder)
 
-        self.settings = Gio.Settings.new("org.cinnamon")
-        self.theme_settings = Gio.Settings.new("org.cinnamon.theme")
+        if self.themes:
+            self.settings = Gio.Settings.new('org.cinnamon.theme')
+            self.enabled_key = 'name'
+        else:
+            self.settings = Gio.Settings.new('org.cinnamon')
+            self.enabled_key = 'enabled-%ss' % self.collection_type
+        self.settings.connect('changed::%s' % self.enabled_key, self._update_status)
 
         if self.themes:
             self.install_folder = '%s/.themes/' % (home)
@@ -158,7 +163,7 @@ class Spice_Harvester(GObject.Object):
 
         self._load_metadata()
 
-        if not os.path.exists(os.path.join(self.cache_folder, "index.json")):
+        if not os.path.exists(os.path.join(self.cache_folder, 'index.json')):
             self.has_cache = False
         else:
             self.has_cache = True
@@ -168,24 +173,24 @@ class Spice_Harvester(GObject.Object):
         self._sigLoadFinished = None
 
         self.monitor = Gio.File.new_for_path(self.install_folder).monitor_directory(0, None)
-        self.monitorId = self.monitor.connect("changed", self._directory_changed)
+        self.monitorId = self.monitor.connect('changed', self._directory_changed)
 
         try:
             Gio.DBusProxy.new_for_bus(Gio.BusType.SESSION, Gio.DBusProxyFlags.NONE, None,
-                                      "org.Cinnamon", "/org/Cinnamon", "org.Cinnamon", None, self._on_proxy_ready, None)
+                                      'org.Cinnamon', '/org/Cinnamon', 'org.Cinnamon', None, self._on_proxy_ready, None)
         except dbus.exceptions.DBusException as e:
             print(e)
 
     def _on_proxy_ready (self, object, result, data=None):
         self._proxy = Gio.DBusProxy.new_for_bus_finish(result)
-        self._proxy.connect("g-signal", self._on_signal)
+        self._proxy.connect('g-signal', self._on_signal)
 
         for command, args in self._proxy_deferred_actions:
             getattr(self._proxy, command)(*args)
         self._proxy_deferred_actions = []
 
-        self.connect_proxy('XletAddedComplete', self._update_enabled_xlets)
-        self._update_enabled_xlets()
+        self.connect_proxy('XletAddedComplete', self._update_status)
+        self._update_status()
 
     def _on_signal(self, proxy, sender_name, signal_name, params):
         for name, callback in self._proxy_signals:
@@ -210,7 +215,7 @@ class Spice_Harvester(GObject.Object):
         else:
             getattr(self._proxy, command)(*args)
 
-    def _update_enabled_xlets(self, *args):
+    def _update_status(self, *args):
         try:
             if self._proxy:
                 self.running_uuids = self._proxy.GetRunningXletUUIDs('(s)', self.collection_type)
@@ -218,11 +223,12 @@ class Spice_Harvester(GObject.Object):
                 self.running_uuids = []
         except:
             self.running_uuids = []
+        self.emit('status-changed')
 
     """ opens to the web page of the given uuid"""
     def open_spice_page(self, uuid):
         id = self.index_cache[uuid]['spices-id']
-        os.system("xdg-open '%s/%ss/view/%s'" % (URL_SPICES_HOME, self.collection_type, id))
+        os.system('xdg-open "%s/%ss/view/%s"' % (URL_SPICES_HOME, self.collection_type, id))
 
     """ returns a Gtk.Widget that can be added to the application. This widget will show the progress of any
         asynchronous actions taking place (ie. refreshing the cache or downloading an applet)"""
@@ -371,10 +377,10 @@ class Spice_Harvester(GObject.Object):
             for uuid in extensions:
                 subdirectory = os.path.join(directory, uuid)
                 try:
-                    json_data = open(os.path.join(subdirectory, "metadata.json")).read()
+                    json_data = open(os.path.join(subdirectory, 'metadata.json')).read()
                     metadata = json.loads(json_data)
-                    metadata["path"] = subdirectory
-                    metadata["writable"] = os.access(subdirectory, os.W_OK)
+                    metadata['path'] = subdirectory
+                    metadata['writable'] = os.access(subdirectory, os.W_OK)
                     self.meta_map[uuid] = metadata
                 except Exception, detail:
                     print detail
@@ -405,17 +411,18 @@ class Spice_Harvester(GObject.Object):
         except Exception as e:
             return False
 
-    """ checks whether the spice is currently enabled or not"""
-    def get_is_enabled(self, uuid):
-        if self.themes:
-            return self.theme_settings.get_string('name') == uuid
-        else:
-            enabled_list = self.settings.get_strv('enabled-%ss' % self.collection_type)
+    """ returns the number of instances currently enabled"""
+    def get_enabled(self, uuid):
+        enabled_count = 0
+        if not self.themes:
+            enabled_list = self.settings.get_strv(self.enabled_key)
             for item in enabled_list:
                 if uuid in item:
-                    return True
+                    enabled_count += 1
+        elif self.settings.get_string(self.enabled_key) == uuid:
+            enabled_count = 1
 
-            return False
+        return enabled_count
 
     """ checks whether the spice is currently running (it may be enabled but not running if there was an error in initialization)"""
     def get_is_running(self, uuid):
@@ -599,7 +606,7 @@ class Spice_Harvester(GObject.Object):
 
         except Exception, detail:
             if not self.abort_download:
-                self.errorMessage(_("An error occurred during installation or updating.  You may wish to report this incident to the developer of %s.\n\nIf this was an update, the previous installation is unchanged") % (uuid), str(detail))
+                self.errorMessage(_("An error occurred during installation or updating. You may wish to report this incident to the developer of %s.\n\nIf this was an update, the previous installation is unchanged") % (uuid), str(detail))
             return False
 
         try:
@@ -609,46 +616,46 @@ class Spice_Harvester(GObject.Object):
             pass
 
     def _install_finished(self, job):
-        uuid = job["uuid"]
-        if self.get_is_enabled(uuid):
-            self.send_proxy_signal('ReloadXlet', "(ss)", uuid, self.collection_type.upper())
+        uuid = job['uuid']
+        if self.get_enabled(uuid):
+            self.send_proxy_signal('ReloadXlet', '(ss)', uuid, self.collection_type.upper())
 
     """ uninstalls and removes the given extension"""
-    def uninstall(self, uuid, name):
-        job = {'uuid': uuid, 'name': name, 'func': self._uninstall}
+    def uninstall(self, uuid):
+        job = {'uuid': uuid, 'func': self._uninstall}
         job['progress_text'] = _("Uninstalling %s %s") % (self.collection_type, uuid)
         self._push_job(job)
 
     def _uninstall(self, job):
         try:
+            uuid = job['uuid']
             if not self.themes:
-                if job["schema"] != "":
-                    sentence = _("Please enter your password to remove the settings schema for %s") % (job["uuid"])
-                    if os.path.exists("/usr/bin/gksu") and os.path.exists("/usr/share/cinnamon/cinnamon-settings/bin/removeSchema.py"):
-                        launcher = "gksu  --message \"<b>%s</b>\"" % sentence
-                        tool = "/usr/share/cinnamon/cinnamon-settings/bin/removeSchema.py %s" % (job["schema"])
-                        command = "%s %s" % (launcher, tool)
-                        os.system(command)
+                if 'schema-file' in self.meta_map[uuid]:
+                    sentence = _("Please enter your password to remove the settings schema for %s") % (uuid)
+                    if os.path.exists('/usr/bin/gksu') and os.path.exists('/usr/share/cinnamon/cinnamon-settings/bin/removeSchema.py'):
+                        for file in self.meta_map[uuid]:
+                            launcher = 'gksu  --message "<b>%s</b>"' % sentence
+                            tool = '/usr/share/cinnamon/cinnamon-settings/bin/removeSchema.py %s' % (file)
+                            command = '%s %s' % (launcher, tool)
+                            os.system(command)
                     else:
                         self.errorMessage(_("Could not remove the settings schema for %s.  You will have to perform this step yourself.  This is not a critical error.") % (job["uuid"]))
-                shutil.rmtree(os.path.join(self.install_folder, job["uuid"]))
 
                 # Uninstall spice localization files, if any
                 if (os.path.exists(locale_inst)):
                     i19_folders = os.listdir(locale_inst)
                     for i19_folder in i19_folders:
-                        if os.path.isfile(os.path.join(locale_inst, i19_folder, 'LC_MESSAGES', "%s.mo" % job["uuid"])):
-                            os.remove(os.path.join(locale_inst, i19_folder, 'LC_MESSAGES', "%s.mo" % job["uuid"]))
+                        if os.path.isfile(os.path.join(locale_inst, i19_folder, 'LC_MESSAGES', '%s.mo' % uuid)):
+                            os.remove(os.path.join(locale_inst, i19_folder, 'LC_MESSAGES', '%s.mo' % uuid))
                         # Clean-up this locale folder
                         removeEmptyFolders(os.path.join(locale_inst, i19_folder))
 
                 # Uninstall settings file, if any
-                if (os.path.exists(os.path.join(settings_dir, job["uuid"]))):
-                    shutil.rmtree(os.path.join(settings_dir, job["uuid"]))
-            else:
-                shutil.rmtree(os.path.join(self.install_folder, job["name"]))
+                if (os.path.exists(os.path.join(settings_dir, uuid))):
+                    shutil.rmtree(os.path.join(settings_dir, uuid))
+            shutil.rmtree(os.path.join(self.install_folder, uuid))
         except Exception, detail:
-            self.errorMessage(_("Problem uninstalling %s.  You may need to manually remove it.") % (job["uuid"]), detail)
+            self.errorMessage(_("Problem uninstalling %s. You may need to remove it manually.") % (job['uuid']), detail)
 
     """ applies all available updates"""
     def update_all(self):
@@ -677,10 +684,53 @@ class Spice_Harvester(GObject.Object):
     def errorMessage(self, msg, detail=None):
         ui_thread_do(self._ui_error_message, msg, detail)
 
+    def enable_extension(self, uuid, panel=1, box='right', position=0):
+        if self.collection_type == 'applet':
+            entries = []
+            applet_id = self.settings.get_int('next-applet-id');
+            self.settings.set_int('next-applet-id', (applet_id+1));
+
+            for entry in self.settings.get_strv(self.enabled_key):
+                info = entry.split(':')
+                pos = int(info[2])
+                if info[0] == 'panel%d' % panel and info[1] == box and position <= pos:
+                    info[2] = str(pos+1)
+                    entries.append(':'.join(info))
+                else:
+                    entries.append(entry)
+
+            entries.append('panel%d:%s:%d:%s:%d' % (panel, box, position, uuid, applet_id))
+
+            self.settings.set_strv(self.enabled_key, entries)
+        elif self.collection_type == 'desklet':
+            desklet_id = self.settings.get_int('next-desklet-id');
+            self.settings.set_int('next-desklet-id', (desklet_id+1));
+            enabled = self.settings.get_strv(self.enabled_key)
+
+            screen = Gdk.Screen.get_default()
+            primary = screen.get_primary_monitor()
+            primary_rect = screen.get_monitor_geometry(primary)
+            enabled.append(('%s:%d:%d:%d') % (uuid, desklet_id, primary_rect.x + 100, primary_rect.y + 100))
+
+            self.settings.set_strv(self.enabled_key, enabled)
+
+        else:
+            enabled = self.settings.get_strv(self.enabled_key)
+            enabled.append(uuid)
+            self.settings.set_strv(self.enabled_key, enabled)
+
+    def disable_extension(self, uuid):
+        enabled_extensions = self.settings.get_strv(self.enabled_key)
+        new_list = []
+        for enabled_extension in enabled_extensions:
+            if uuid not in enabled_extension:
+                new_list.append(enabled_extension)
+        self.settings.set_strv(self.enabled_key, new_list)
+
     """ gets the icon  for a given uuid"""
     def get_icon(self, uuid):
         try:
-            if self.collection_type == 'theme':
+            if self.themes:
                 file_path = os.path.join(self.cache_folder, os.path.basename(self.index_cache[uuid]['screenshot']))
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file_path, 100, -1, True)
             else:

@@ -79,15 +79,3 @@ class ManageDeskletsPage(ManageSpicesPage):
 
     def __init__(self, parent, spices, window):
         super(ManageDeskletsPage, self).__init__(parent, self.collection_type, spices, window)
-
-    def enable(self, uuid):
-        desklet_id = self.settings.get_int("next-desklet-id");
-        self.settings.set_int("next-desklet-id", (desklet_id+1));
-
-        screen = Gdk.Screen.get_default()
-        primary = screen.get_primary_monitor()
-        primary_rect = screen.get_monitor_geometry(primary)
-        self.enabled_extensions.append(("%s:%d:%d:%d") % (uuid, desklet_id, primary_rect.x + 100, primary_rect.y + 100))
-
-        self.settings.set_strv('enabled-desklets', self.enabled_extensions)
-
