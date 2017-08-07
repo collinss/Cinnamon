@@ -224,6 +224,7 @@ class ManageSpicesRow(Gtk.ListBoxRow):
         grid.attach_next_to(desc_box, icon, Gtk.PositionType.RIGHT, 1, 1)
 
         self.status_box = Gtk.Box()
+        self.status_box.set_spacing(4)
         grid.attach_next_to(self.status_box, desc_box, Gtk.PositionType.RIGHT, 1, 1)
 
         self.button_box = Gtk.Box()
@@ -627,6 +628,7 @@ class DownloadSpicesRow(Gtk.ListBoxRow):
         size_groups[0].add_widget(score_box)
 
         self.status_box = Gtk.Box()
+        self.status_box.set_spacing(4)
         widget.pack_start(self.status_box, False, False, 0)
         size_groups[1].add_widget(self.status_box)
 
