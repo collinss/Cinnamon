@@ -11,6 +11,7 @@ try:
     import cgi
     import subprocess
     import threading
+    import time
     from PIL import Image
 except Exception, detail:
     print detail
@@ -257,8 +258,8 @@ class Spice_Harvester(GObject.Object):
             progressbar.set_fraction(fraction)
 
     def _set_progressbar_visible(self, visible):
-            for progressbar in self.progressbars:
-                progressbar.revealer.set_reveal_child(visible)
+        for progressbar in self.progressbars:
+            progressbar.revealer.set_reveal_child(visible)
 
     # updates any progress bars with the download progress
     def _update_progress(self, count, blockSize, totalSize):
@@ -518,8 +519,12 @@ class Spice_Harvester(GObject.Object):
         self.download_total_files = 0
         self.download_current_file = 0
         self.is_downloading_image_cache = False
+        self.settings.set_int('%s-cache-updated' % self.collection_type, time.time())
         self._advance_queue()
         self.emit('cache-loaded')
+
+    def get_cache_age(self):
+        return (time.time() - self.settings.get_int('%s-cache-updated' % self.collection_type)) / 86400
 
     # checks for corrupt images in the cache so we can redownload them the next time we refresh
     def _is_bad_image(self, path):
