@@ -75,7 +75,7 @@ class ManageDeskletsPage(ManageSpicesPage):
     instance_button_text = _("Add")
     remove_button_text = _("Remove")
     uninstall_button_text = _("Uninstall")
-    restore_button_text = _("Default")
+    restore_button_text = _("Remove all")
 
     def __init__(self, parent, spices, window):
         super(ManageDeskletsPage, self).__init__(parent, self.collection_type, spices, window)

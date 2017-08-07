@@ -53,7 +53,7 @@ class ManageExtensionsPage(ManageSpicesPage):
     instance_button_text = _("Enable")
     remove_button_text = _("Disable")
     uninstall_button_text = _("Uninstall")
-    restore_button_text = _("Default")
+    restore_button_text = _("Disable all")
 
     def __init__(self, parent, spices, window):
         super(ManageExtensionsPage, self).__init__(parent, self.collection_type, spices, window)
