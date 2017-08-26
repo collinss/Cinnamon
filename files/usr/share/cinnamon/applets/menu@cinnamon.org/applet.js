@@ -2491,7 +2491,7 @@ MyApplet.prototype = {
     },
 
     _refreshApps : function() {
-        /* iterate in reverse, so multiple splices will not upset 
+        /* iterate in reverse, so multiple splices will not upset
          * the remaining elements */
         for (let i = this._categoryButtons.length - 1; i > -1; i--) {
             if (this._categoryButtons[i] instanceof CategoryButton) {
@@ -3289,7 +3289,7 @@ MyApplet.prototype = {
             this.selectedAppDescription.set_text("");
         }
 
-        SearchProviderManager.launch_all(pattern, Lang.bind(this, function(provider, results){
+        SearchProviderManager.launch_enabled(pattern, Lang.bind(this, function(provider, results){
             try{
             for (var i in results){
                 if (results[i].type != 'software')
