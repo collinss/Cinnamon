@@ -17,7 +17,7 @@ from setproctitle import setproctitle
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('XApp', '1.0')
-from gi.repository import Gio, Gtk, Pango, Gdk, XApp
+from gi.repository import Gio, Gtk, Pango, Gdk, XApp, GdkPixbuf
 
 sys.path.append(config.currentPath + "/modules")
 sys.path.append(config.currentPath + "/bin")
@@ -151,11 +151,11 @@ class MainWindow:
                 self.stack_switcher.set_opacity(0)
             if user_action:
                 self.main_stack.set_visible_child_name("content_box_page")
-                self.header_stack.set_visible_child_name("content_box")
+                # self.header_stack.set_visible_child_name("content_box")
 
             else:
                 self.main_stack.set_visible_child_full("content_box_page", Gtk.StackTransitionType.NONE)
-                self.header_stack.set_visible_child_full("content_box", Gtk.StackTransitionType.NONE)
+                # self.header_stack.set_visible_child_full("content_box", Gtk.StackTransitionType.NONE)
 
             self.current_sidepage = sidePage
             width = 0
@@ -195,37 +195,47 @@ class MainWindow:
     def __init__(self):
         self.builder = Gtk.Builder()
         self.builder.add_from_file(config.currentPath + "/cinnamon-settings.ui")
-        self.window = XApp.GtkWindow(window_position=Gtk.WindowPosition.CENTER,
-                                     default_width=800, default_height=600)
+        # self.window = XApp.GtkWindow(window_position=Gtk.WindowPosition.CENTER,
+        #                              default_width=800, default_height=600)
+        self.window = self.builder.get_object("main_window")
 
-        main_box = self.builder.get_object("main_box")
-        self.window.add(main_box)
+        # main_box = self.builder.get_object("main_box")
+        # self.window.add(main_box)
         self.top_bar = self.builder.get_object("top_bar")
         self.side_view = {}
+        self.title_switcher = self.builder.get_object("title_switcher")
         self.main_stack = self.builder.get_object("main_stack")
         self.main_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self.main_stack.set_transition_duration(150)
-        self.header_stack = self.builder.get_object("header_stack")
-        self.header_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self.header_stack.set_transition_duration(150)
-        self.side_view_container = self.builder.get_object("category_box")
-        self.side_view_sw = self.builder.get_object("side_view_sw")
-        context = self.side_view_sw.get_style_context()
-        context.add_class("cs-category-view")
-        context.add_class("view")
-        self.side_view_sw.show_all()
-        self.content_box = self.builder.get_object("content_box")
-        self.content_box_sw = self.builder.get_object("content_box_sw")
-        self.content_box_sw.show_all()
-        self.button_back = self.builder.get_object("button_back")
-        self.button_back.set_tooltip_text(_("Back to all settings"))
-        button_image = self.builder.get_object("image1")
-        button_image.props.icon_size = Gtk.IconSize.MENU
+        # self.header_stack = self.builder.get_object("header_stack")
+        # self.header_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        # self.header_stack.set_transition_duration(150)
+        self.app_box = self.builder.get_object("app_box")
+        self.app_box.set_text_column(0)
+        self.app_box.set_pixbuf_column(1)
+        self.sa_app_model = self.builder.get_object("sa_app_model")
+        self.sa_app_model = Gtk.ListStore(str, GdkPixbuf.Pixbuf, str)
+        self.app_box.set_model(self.sa_app_model)
+
+
+        # self.side_view_container = self.builder.get_object("category_box")
+        # self.side_view_sw = self.builder.get_object("side_view_sw")
+        # context = self.side_view_sw.get_style_context()
+        # context.add_class("cs-category-view")
+        # context.add_class("view")
+        # self.side_view_sw.show_all()
+        # self.content_box = self.builder.get_object("content_box")
+        # self.content_box_sw = self.builder.get_object("content_box_sw")
+        # self.content_box_sw.show_all()
+        # self.button_back = self.builder.get_object("button_back")
+        # self.button_back.set_tooltip_text(_("Back to all settings"))
+        # button_image = self.builder.get_object("image1")
+        # button_image.props.icon_size = Gtk.IconSize.MENU
 
         self.stack_switcher = self.builder.get_object("stack_switcher")
 
-        m, n = self.button_back.get_preferred_width()
-        self.stack_switcher.set_margin_end(n)
+        # m, n = self.button_back.get_preferred_width()
+        # self.stack_switcher.set_margin_end(n)
 
         self.search_entry = self.builder.get_object("search_box")
         self.search_entry.set_placeholder_text(_("Search"))
@@ -237,17 +247,18 @@ class MainWindow:
         self.builder.connect_signals(self)
         self.unsortedSidePages = []
         self.sidePages = []
+        self.sa_app_modules = []
         self.settings = Gio.Settings.new("org.cinnamon")
         self.current_cat_widget = None
 
         self.current_sidepage = None
         self.c_manager = capi.CManager()
-        self.content_box.c_manager = self.c_manager
+        # self.content_box.c_manager = self.c_manager
         self.bar_heights = 0
 
         for module in modules:
             try:
-                mod = module.Module(self.content_box)
+                mod = module.Module(self.c_manager)
                 if self.loadCheck(mod) and self.setParentRefs(mod):
                     self.unsortedSidePages.append((mod.sidePage, mod.name, mod.category))
             except:
@@ -255,30 +266,34 @@ class MainWindow:
                 traceback.print_exc()
 
         for item in CONTROL_CENTER_MODULES:
-            ccmodule = SettingsWidgets.CCModule(item[0], item[1], item[2], item[3], item[4], self.content_box)
+            ccmodule = SettingsWidgets.CCModule(item[0], item[1], item[2], item[3], item[4], self.c_manager)
             if ccmodule.process(self.c_manager):
                 self.unsortedSidePages.append((ccmodule.sidePage, ccmodule.name, ccmodule.category))
 
         for item in STANDALONE_MODULES:
-            samodule = SettingsWidgets.SAModule(item[0], item[1], item[2], item[3], item[4], self.content_box)
+            samodule = SettingsWidgets.SAModule(item[0], item[1], item[2], item[3], item[4], self.c_manager)
             if samodule.process():
-                self.unsortedSidePages.append((samodule.sidePage, samodule.name, samodule.category))
+                self.sa_app_modules.append((samodule.sidePage, samodule.name, samodule.category))
 
         # sort the modules alphabetically according to the current locale
         localeStrKey = cmp_to_key(locale.strcoll)
         # Apply locale key to the field name of each side page.
         sidePagesKey = lambda m : localeStrKey(m[0].name)
         self.sidePages = sorted(self.unsortedSidePages, key=sidePagesKey)
+        self.sa_app_modules = sorted(self.sa_app_modules, key=sidePagesKey)
 
+        icon_theme = Gtk.IconTheme.get_default()
+        for sp, app_id, app_cat in self.sa_app_modules:
+            icon = icon_theme.load_icon(sp.icon, 32, 0)
+            self.sa_app_model.append([sp.name, icon, sp.exec_name])
 
         # create the backing stores for the side nav-view.
         sidePagesIters = {}
         self.store = {}
         self.storeFilter = {}
-        for sidepage in self.sidePages:
-            sp, sp_id, sp_cat = sidepage
+        for sp, sp_id, sp_cat in self.sidePages:
             if sp_cat not in self.store:        #       Label         Icon    sidePage    Category
-                self.store[sidepage[2]] = Gtk.ListStore(str,          str,    object,     str)
+                self.store[sp_cat] = Gtk.ListStore(str,          str,    object,     str)
                 for category in CATEGORIES:
                     if category["id"] == sp_cat:
                         category["show"] = True
@@ -288,6 +303,10 @@ class MainWindow:
             if len(name) > 30:
                 name = "%s..." % name[:30]
             sidePagesIters[sp_id] = (self.store[sp_cat].append([name, sp.icon, sp, sp_cat]), sp_cat)
+
+            self.main_stack.add_titled(sp, sp_id, name)
+            self.main_stack.child_set_property(sp, 'icon_name', sp.icon)
+            sp.show_all()
 
         self.min_label_length = 0
         self.min_pix_length = 0
@@ -308,11 +327,11 @@ class MainWindow:
         self.min_label_length = min(self.min_label_length, MAX_LABEL_WIDTH)
         self.min_pix_length = min(self.min_pix_length, MAX_PIX_WIDTH)
 
-        self.displayCategories()
+        # self.displayCategories()
 
         # set up larger components.
         self.window.set_title(_("System Settings"))
-        self.button_back.connect('clicked', self.back_to_icon_view)
+        # self.button_back.connect('clicked', self.back_to_icon_view)
 
         self.calculate_bar_heights()
 
@@ -323,7 +342,7 @@ class MainWindow:
             # group.
             wm_class = "cinnamon-settings %s" % sys.argv[1]
             self.window.set_wmclass(wm_class, wm_class)
-            self.button_back.hide()
+            # self.button_back.hide()
             (iter, cat) = sidePagesIters[sys.argv[1]]
             path = self.store[cat].get_path(iter)
             if path:
@@ -335,7 +354,21 @@ class MainWindow:
             self.window.connect("key-press-event", self.on_keypress)
             self.window.connect("button-press-event", self.on_buttonpress)
 
+        self.main_stack.connect('notify::visible-child', self.page_selected)
         self.window.show()
+
+    def page_selected(self, *args):
+        current_page = self.main_stack.get_visible_child()
+        stack = current_page.stack
+        for name in current_page.page_names:
+            label = Gtk.Label()
+            label.set_markup('<span size="large">%s</span>' % name)
+            if name == stack.get_visible_child_name():
+                pass # set a bar at the bottom
+            self.title_switcher.add(label)
+            label.show()
+        # self.stack_switcher.set_stack(current_page.stack)
+        # self.header_stack.set_visible_child_name('page1')
 
     def on_keypress(self, widget, event):
         grab = False

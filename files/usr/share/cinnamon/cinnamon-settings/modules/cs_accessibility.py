@@ -39,12 +39,14 @@ class Module:
             self.mag_settings = Gio.Settings(schema_id="org.cinnamon.desktop.a11y.magnifier");
 
             self.sidePage.stack = SettingsStack()
+            self.sidePage.page_names = []
             self.sidePage.add_widget(self.sidePage.stack)
 
 ####    Visual
 
             page = SettingsPage()
             self.sidePage.stack.add_titled(page, "visual", _("Visual"))
+            self.sidePage.page_names.append(_("Visual"))
 
 # Visual Aids
 
@@ -138,6 +140,7 @@ class Module:
 
             page = SettingsPage()
             self.sidePage.stack.add_titled(page, "keyboard", _("Keyboard"))
+            self.sidePage.page_names.append(_("Keyboard"))
 
 # Virtual keyboard
 
@@ -229,6 +232,7 @@ class Module:
 
             page = SettingsPage()
             self.sidePage.stack.add_titled(page, "typing", _("Typing assistance"))
+            self.sidePage.page_names.append(("Typing assistance"))
 
 # Stickykeys
 
@@ -325,6 +329,7 @@ class Module:
 
             page = SettingsPage()
             self.sidePage.stack.add_titled(page, "mouse", _("Mouse"))
+            self.sidePage.page_names.append(_("Mouse"))
 
 # Mousekeys
 

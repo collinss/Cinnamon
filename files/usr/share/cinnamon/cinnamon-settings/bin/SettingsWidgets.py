@@ -92,12 +92,13 @@ class EditableEntry (Gtk.Stack):
     def get_text(self):
         return self.entry.get_text()
 
-class SidePage(object):
-    def __init__(self, name, icon, keywords, content_box = None, size = None, is_c_mod = False, is_standalone = False, exec_name = None, module=None):
+class SidePage(Gtk.Box):
+    def __init__(self, name, icon, keywords, c_manager, size = None, is_c_mod = False, is_standalone = False, exec_name = None, module=None):
+        super(SidePage, self).__init__(orientation=Gtk.Orientation.VERTICAL)
         self.name = name
         self.icon = icon
-        self.content_box = content_box
         self.widgets = []
+        self.c_manager = c_manager
         self.is_c_mod = is_c_mod
         self.is_standalone = is_standalone
         self.exec_name = exec_name
@@ -110,14 +111,20 @@ class SidePage(object):
         if self.module != None:
             self.module.loaded = False
 
-    def add_widget(self, widget):
-        self.widgets.append(widget)
+        self.connect('map', self.build)
 
-    def build(self):
+    def add_widget(self, widget):
+        # self.widgets.append(widget)
+        if hasattr(widget, 'expand'):
+            self.pack_start(widget, True, True, 2)
+        else:
+            self.pack_start(widget, False, False, 2)
+
+    def build(self, *args):
         # Clear all the widgets from the content box
-        widgets = self.content_box.get_children()
-        for widget in widgets:
-            self.content_box.remove(widget)
+        # widgets = self.content_box.get_children()
+        # for widget in widgets:
+        #     self.content_box.remove(widget)
 
         if (self.module is not None):
             self.module.on_module_selected()
@@ -128,11 +135,7 @@ class SidePage(object):
             return
 
         # Add our own widgets
-        for widget in self.widgets:
-            if hasattr(widget, 'expand'):
-                self.content_box.pack_start(widget, True, True, 2)
-            else:
-                self.content_box.pack_start(widget, False, False, 2)
+        # for widget in self.widgets:
 
         # C modules are sort of messy - they check the desktop type
         # (for Unity or GNOME) and show/hide UI items depending on
@@ -140,15 +143,15 @@ class SidePage(object):
         # mess up these modifications - so for these, we just show the
         # top-level widget
         if not self.is_c_mod:
-            self.content_box.show_all()
+            self.show_all()
             try:
                 self.check_third_arg()
             except:
                 pass
             return
 
-        self.content_box.show()
-        for child in self.content_box:
+        self.show()
+        for child in self.get_children():
             child.show()
 
             # C modules can have non-C parts. C parts are all named c_box
@@ -157,7 +160,7 @@ class SidePage(object):
 
             c_widgets = child.get_children()
             if not c_widgets:
-                c_widget = self.content_box.c_manager.get_c_widget(self.exec_name)
+                c_widget = self.c_manager.get_c_widget(self.exec_name)
                 if c_widget is not None:
                     child.pack_start(c_widget, False, False, 2)
                     c_widget.show()
@@ -179,8 +182,8 @@ class SidePage(object):
             recursively_iterate(child)
 
 class CCModule:
-    def __init__(self, label, mod_id, icon, category, keywords, content_box):
-        sidePage = SidePage(label, icon, keywords, content_box, size=-1, is_c_mod=True, is_standalone=False, exec_name=mod_id, module=None)
+    def __init__(self, label, mod_id, icon, category, keywords, c_manager):
+        sidePage = SidePage(label, icon, keywords, c_manager, size=-1, is_c_mod=True, is_standalone=False, exec_name=mod_id, module=None)
         self.sidePage = sidePage
         self.name = mod_id
         self.category = category
@@ -196,8 +199,8 @@ class CCModule:
             return False
 
 class SAModule:
-    def __init__(self, label, mod_id, icon, category, keywords, content_box):
-        sidePage = SidePage(label, icon, keywords, content_box, False, False, True, mod_id)
+    def __init__(self, label, mod_id, icon, category, keywords, c_manager):
+        sidePage = SidePage(label, icon, keywords, c_manager, False, False, True, mod_id)
         self.sidePage = sidePage
         self.name = mod_id
         self.category = category
@@ -321,10 +324,11 @@ class SettingsPage(Gtk.Box):
         Gtk.Box.__init__(self)
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.set_spacing(15)
-        self.set_margin_left(80)
-        self.set_margin_right(80)
-        self.set_margin_top(15)
-        self.set_margin_bottom(15)
+        self.set_border_width(12)
+        # self.set_margin_left(80)
+        # self.set_margin_right(80)
+        # self.set_margin_top(15)
+        # self.set_margin_bottom(15)
 
     def add_section(self, title):
         section = SettingsBox(title)
@@ -342,66 +346,71 @@ class SettingsPage(Gtk.Box):
 
         return section
 
-class SettingsBox(Gtk.Frame):
+class SettingsBox(Gtk.Box):
     def __init__(self, title):
-        Gtk.Frame.__init__(self)
-        self.set_shadow_type(Gtk.ShadowType.IN)
-        frame_style = self.get_style_context()
-        frame_style.add_class("view")
+        super(SettingsBox, self).__init__(orientation=Gtk.Orientation.VERTICAL)
+        self.set_border_width(12)
+        self.set_spacing(6)
+        # self.set_shadow_type(Gtk.ShadowType.IN)
+        # frame_style = self.get_style_context()
+        # frame_style.add_class("view")
         self.size_group = Gtk.SizeGroup()
         self.size_group.set_mode(Gtk.SizeGroupMode.VERTICAL)
 
+        # toolbar = Gtk.Toolbar.new()
+        # toolbar_context = toolbar.get_style_context()
+        # Gtk.StyleContext.add_class(Gtk.Widget.get_style_context(toolbar), "cs-header")
+
+        label = Gtk.Label(halign=Gtk.Align.START)
+        label.set_markup("<b><big>%s</big></b>" % title)
+        self.pack_start(label, False, False, 0)
+
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.add(self.box)
+        self.box.set_spacing(6)
+        self.pack_start(self.box, False, False, 0)
 
-        toolbar = Gtk.Toolbar.new()
-        toolbar_context = toolbar.get_style_context()
-        Gtk.StyleContext.add_class(Gtk.Widget.get_style_context(toolbar), "cs-header")
+        # title_holder = Gtk.ToolItem()
+        # title_holder.add(label)
+        # toolbar.add(title_holder)
+        # self.box.add(toolbar)
 
-        label = Gtk.Label()
-        label.set_markup("<b>%s</b>" % title)
-        title_holder = Gtk.ToolItem()
-        title_holder.add(label)
-        toolbar.add(title_holder)
-        self.box.add(toolbar)
-
-        self.need_separator = False
+        # self.need_separator = False
 
     def add_row(self, widget):
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        if self.need_separator:
-            vbox.add(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
-        list_box = Gtk.ListBox()
-        list_box.set_selection_mode(Gtk.SelectionMode.NONE)
-        row = Gtk.ListBoxRow(can_focus=False)
-        row.add(widget)
-        if isinstance(widget, Switch):
-            list_box.connect("row-activated", widget.clicked)
-        list_box.add(row)
-        vbox.add(list_box)
-        self.box.add(vbox)
+        # vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # if self.need_separator:
+            # vbox.add(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
+        # list_box = Gtk.ListBox()
+        # list_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        # row = Gtk.ListBoxRow(can_focus=False)
+        # row.add(widget)
+        # if isinstance(widget, Switch):
+            # list_box.connect("row-activated", widget.clicked)
+        # list_box.add(row)
+        # vbox.add(list_box)
+        self.box.add(widget)
 
-        self.need_separator = True
+        # self.need_separator = True
 
     def add_reveal_row(self, widget, schema=None, key=None, values=None, check_func=None, revealer=None):
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        if self.need_separator:
-            vbox.add(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
-        list_box = Gtk.ListBox()
-        list_box.set_selection_mode(Gtk.SelectionMode.NONE)
-        row = Gtk.ListBoxRow(can_focus=False)
-        row.add(widget)
-        if isinstance(widget, Switch):
-            list_box.connect("row-activated", widget.clicked)
-        list_box.add(row)
-        vbox.add(list_box)
+        # vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # if self.need_separator:
+            # vbox.add(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
+        # list_box = Gtk.ListBox()
+        # list_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        # row = Gtk.ListBoxRow(can_focus=False)
+        # row.add(widget)
+        # if isinstance(widget, Switch):
+            # list_box.connect("row-activated", widget.clicked)
+        # list_box.add(row)
+        # vbox.add(list_box)
         if revealer is None:
             revealer = SettingsRevealer(schema, key, values, check_func)
         widget.revealer = revealer
-        revealer.add(vbox)
+        revealer.add(widget)
         self.box.add(revealer)
 
-        self.need_separator = True
+        # self.need_separator = True
 
         return revealer
 
@@ -410,9 +419,9 @@ class SettingsWidget(Gtk.Box):
         Gtk.Box.__init__(self)
         self.set_orientation(Gtk.Orientation.HORIZONTAL)
         self.set_spacing(20)
-        self.set_border_width(5)
-        self.set_margin_left(20)
-        self.set_margin_right(20)
+        # self.set_border_width(5)
+        self.set_margin_left(32)
+        self.set_margin_right(32)
 
         if dep_key:
             self.set_dep_key(dep_key)
@@ -453,6 +462,7 @@ class SettingsLabel(Gtk.Label):
         self.set_line_wrap(True)
 
     def set_label_text(self, text):
+        # self.set_markup("<big>%s</big>" % text)
         self.set_label(text)
 
 class IndentedHBox(Gtk.HBox):
